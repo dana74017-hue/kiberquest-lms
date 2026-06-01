@@ -10,59 +10,52 @@ export default function NewCoursePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) {
-      alert("Заполните название и описание");
-      return;
-    }
+    if (!title || !description) return alert("Заполните название и описание");
 
     setLoading(true);
 
     try {
       let pdfUrl = null;
+      let imageUrl = null;
 
-      // === ЗАГРУЗКА PDF ===
-      if (pdfFile) {
-        const fileName = `${Date.now()}-${pdfFile.name}`;
-
-        console.log("Загружаем файл:", fileName);
-
-        const { error: uploadError } = await supabase.storage
-          .from("course-pdfs")
-          .upload(fileName, pdfFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          throw new Error("Не удалось загрузить PDF: " + uploadError.message);
-        }
-
-        pdfUrl = supabase.storage
-          .from("course-pdfs")
-          .getPublicUrl(fileName).data.publicUrl;
+      // Загрузка обложки (картинки)
+      if (imageFile) {
+        const fileName = `images/${Date.now()}-${imageFile.name}`;
+        const { error } = await supabase.storage
+          .from("course-images")
+          .upload(fileName, imageFile);
+        if (error) throw error;
+        imageUrl = supabase.storage.from("course-images").getPublicUrl(fileName).data.publicUrl;
       }
 
-      // === СОЗДАНИЕ КУРСА ===
-      const { error: insertError } = await supabase
-        .from("courses")
-        .insert({
-          title,
-          description,
-          pdf_url: pdfUrl,
-        });
+      // Загрузка PDF
+      if (pdfFile) {
+        const fileName = `pdfs/${Date.now()}-${pdfFile.name}`;
+        const { error } = await supabase.storage
+          .from("course-pdfs")
+          .upload(fileName, pdfFile);
+        if (error) throw error;
+        pdfUrl = supabase.storage.from("course-pdfs").getPublicUrl(fileName).data.publicUrl;
+      }
+
+      // Создаём курс
+      const { error: insertError } = await supabase.from("courses").insert({
+        title,
+        description,
+        pdf_url: pdfUrl,
+        image_url: imageUrl,
+      });
 
       if (insertError) throw insertError;
 
       alert("✅ Курс успешно добавлен!");
       window.location.href = "/courses";
-
     } catch (err: any) {
-      console.error(err);
       alert("Ошибка: " + err.message);
     } finally {
       setLoading(false);
@@ -86,10 +79,22 @@ export default function NewCoursePage() {
                 placeholder="Описание курса..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5 resize-none"
+                rows={5}
+                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5"
               />
 
+              {/* Обложка курса */}
+              <div>
+                <label className="block text-sm mb-2">Обложка курса (картинка)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-slate-300"
+                />
+              </div>
+
+              {/* PDF */}
               <div>
                 <label className="block text-sm mb-2">PDF файл курса (необязательно)</label>
                 <input
@@ -103,9 +108,9 @@ export default function NewCoursePage() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-semibold"
+                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black"
               >
-                {loading ? "Загружаем файл и создаём курс..." : "Создать курс"}
+                {loading ? "Загружаем..." : "Создать курс"}
               </Button>
             </form>
           </CardContent>
