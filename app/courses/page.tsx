@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Eye, BookOpen } from "lucide-react";
+import { Upload, Eye } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -40,7 +41,6 @@ export default function CoursesPage() {
   };
 
   const incrementViews = async (courseId: string) => {
-    // Надёжный способ увеличить счётчик просмотров
     const { data: current } = await supabase
       .from("courses")
       .select("views")
@@ -80,25 +80,30 @@ export default function CoursesPage() {
           {courses.map((course) => (
             <Card
               key={course.id}
-              className="bg-slate-900/70 border border-slate-700 hover:border-cyan-400 transition-all duration-300 group overflow-hidden"
+              className="bg-slate-900/80 border border-slate-700 hover:border-cyan-400 transition-all duration-300 overflow-hidden group"
             >
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-3xl">
-                    📘
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-semibold group-hover:text-cyan-400 transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="text-slate-400 text-sm line-clamp-2">{course.description}</p>
-                  </div>
+              {/* Обложка */}
+              {course.image_url && (
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={course.image_url}
+                    alt={course.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
+              )}
 
-                <div className="flex items-center justify-between text-sm text-slate-400 mb-8">
-                  <div className="flex items-center gap-1">
+              <CardContent className="p-8">
+                <h3 className="text-2xl font-semibold mb-3 group-hover:text-cyan-400 transition-colors">
+                  {course.title}
+                </h3>
+                <p className="text-slate-400 line-clamp-3 mb-6">{course.description}</p>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 text-slate-400">
                     <Eye size={18} />
-                    <span>{course.views || 0} просмотров</span>
+                    <span>{course.views || 0}</span>
                   </div>
                 </div>
 
@@ -107,9 +112,9 @@ export default function CoursesPage() {
                     href={course.pdf_url}
                     target="_blank"
                     onClick={() => incrementViews(course.id)}
-                    className="block w-full text-center py-5 bg-white text-black rounded-3xl font-semibold hover:bg-cyan-400 hover:text-black transition-all"
+                    className="mt-8 block w-full text-center py-5 bg-white text-black rounded-3xl font-semibold hover:bg-cyan-400 hover:text-black transition-all"
                   >
-                    📄 Открыть PDF
+                    📄 Открыть PDF курс
                   </a>
                 )}
               </CardContent>
