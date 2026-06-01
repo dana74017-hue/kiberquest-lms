@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload } from "lucide-react";
 
 export default function NewCoursePage() {
   const [title, setTitle] = useState("");
@@ -13,40 +12,57 @@ export default function NewCoursePage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) {
-      alert("Заполните название и описание курса");
+      alert("Заполните название и описание");
       return;
     }
 
     setLoading(true);
 
     try {
-      let pdfUrl = "";
+      let pdfUrl = null;
 
+      // === ЗАГРУЗКА PDF ===
       if (pdfFile) {
         const fileName = `${Date.now()}-${pdfFile.name}`;
+
+        console.log("Загружаем файл:", fileName);
+
         const { error: uploadError } = await supabase.storage
           .from("course-pdfs")
-          .upload(fileName, pdfFile);
+          .upload(fileName, pdfFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw new Error("Не удалось загрузить PDF: " + uploadError.message);
+        }
 
-        pdfUrl = supabase.storage.from("course-pdfs").getPublicUrl(fileName).data.publicUrl;
+        pdfUrl = supabase.storage
+          .from("course-pdfs")
+          .getPublicUrl(fileName).data.publicUrl;
       }
 
-      const { error } = await supabase.from("courses").insert({
-        title,
-        description,
-        pdf_url: pdfUrl || null,
-      });
+      // === СОЗДАНИЕ КУРСА ===
+      const { error: insertError } = await supabase
+        .from("courses")
+        .insert({
+          title,
+          description,
+          pdf_url: pdfUrl,
+        });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       alert("✅ Курс успешно добавлен!");
       window.location.href = "/courses";
+
     } catch (err: any) {
+      console.error(err);
       alert("Ошибка: " + err.message);
     } finally {
       setLoading(false);
@@ -64,34 +80,32 @@ export default function NewCoursePage() {
                 placeholder="Название курса"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                required
               />
 
               <textarea
-                placeholder="Подробное описание курса..."
+                placeholder="Описание курса..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={6}
-                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5 text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-400"
-                required
+                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5 resize-none"
               />
 
               <div>
-                <label className="block text-sm mb-2 font-medium">PDF файл курса (необязательно)</label>
+                <label className="block text-sm mb-2">PDF файл курса (необязательно)</label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-3xl file:border-0 file:bg-slate-800 file:text-white hover:file:bg-slate-700"
+                  className="block w-full text-sm text-slate-300"
                 />
               </div>
 
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold"
+                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-semibold"
               >
-                {loading ? "Создаём курс..." : "Создать курс"}
+                {loading ? "Загружаем файл и создаём курс..." : "Создать курс"}
               </Button>
             </form>
           </CardContent>
