@@ -1,0 +1,10 @@
+{
+  "nav": {
+    "home": "Home",
+    "courses": "Courses",
+    "editor": "Code Editor",
+    "dashboard": "Dashboard",
+    "quiz": "Quizzes",
+    "admin": "Admin Panel"
+  }
+}
