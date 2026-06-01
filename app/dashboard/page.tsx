@@ -4,122 +4,145 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Camera, Save } from "lucide-react";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
-  const [progress, setProgress] = useState([
-    { name: "HTML + CSS Основы", percent: 85, color: "from-cyan-400 to-blue-500" },
-    { name: "JavaScript с нуля", percent: 40, color: "from-purple-400 to-pink-500" },
-    { name: "React для начинающих", percent: 15, color: "from-emerald-400 to-cyan-500" },
-  ]);
-  const [stats, setStats] = useState({ hours: 14, streak: 7, lessons: 23, points: 1240 });
+  const [profile, setProfile] = useState({ 
+    full_name: "", 
+    status: "Начинающий разработчик" 
+  });
+  const [editing, setEditing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name, status, avatar_url")
+          .eq("id", session.user.id)
+          .single();
+
+        if (data) {
+          setProfile({
+            full_name: data.full_name || session.user.email?.split('@')[0] || "",
+            status: data.status || "Начинающий разработчик"
+          });
+          setAvatarUrl(data.avatar_url || "");
+        }
+      }
     });
   }, []);
 
-  const updateProgress = (index: number, newPercent: number) => {
-    const updated = [...progress];
-    updated[index].percent = newPercent;
-    setProgress(updated);
-    alert(`Прогресс по "${updated[index].name}" обновлён до ${newPercent}%`);
+  const saveProfile = async () => {
+    if (!user) return alert("Ошибка авторизации");
+
+    let newAvatarUrl = avatarUrl;
+
+    if (avatarFile) {
+      const fileName = `${user.id}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, avatarFile);
+
+      if (!error) {
+        newAvatarUrl = supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl;
+      }
+    }
+
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      email: user.email,
+      full_name: profile.full_name,
+      status: profile.status,
+      avatar_url: newAvatarUrl,
+    });
+
+    setAvatarUrl(newAvatarUrl);
+    setEditing(false);
+    alert("✅ Профиль успешно обновлён!");
   };
 
-  const completeLesson = () => {
-    setStats(prev => ({
-      hours: prev.hours + 1,
-      streak: prev.streak + 1,
-      lessons: prev.lessons + 1,
-      points: prev.points + 50
-    }));
-    alert("🎉 Урок засчитан! +1 час, +50 баллов");
+  const uploadAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarUrl(URL.createObjectURL(file)); // предпросмотр
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
       <div className="max-w-screen-2xl mx-auto">
-        {/* Приветствие */}
-        <div className="flex items-center gap-6 mb-12">
-          <Avatar className="w-24 h-24 border-4 border-cyan-400">
-            <AvatarFallback className="text-5xl bg-gradient-to-br from-cyan-400 to-blue-500">
-              {user?.email?.[0]?.toUpperCase() || "D"}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-5xl font-bold">Добро пожаловать, {user?.email?.split('@')[0]}!</h1>
-            <p className="text-cyan-400 text-xl">Уровень: Начинающий разработчик • 1240 баллов</p>
+        {/* Шапка профиля */}
+        <div className="flex flex-col md:flex-row gap-6 items-start mb-12">
+          <div className="relative group">
+            <Avatar className="w-32 h-32 border-4 border-cyan-400 overflow-hidden">
+              <img 
+                src={avatarUrl || ""} 
+                alt="avatar"
+                className="object-cover w-full h-full"
+              />
+              <AvatarFallback className="text-6xl bg-gradient-to-br from-cyan-400 to-blue-500">
+                {profile.full_name?.[0] || "D"}
+              </AvatarFallback>
+            </Avatar>
+            <label className="absolute bottom-3 right-3 bg-cyan-500 hover:bg-cyan-400 text-black p-3 rounded-full cursor-pointer shadow-lg">
+              <Camera size={20} />
+              <input type="file" accept="image/*" onChange={uploadAvatar} className="hidden" />
+            </label>
           </div>
-          <Button onClick={completeLesson} className="ml-auto bg-emerald-500 hover:bg-emerald-600">
-            ✅ Завершить урок (+50 баллов)
-          </Button>
-        </div>
 
-        <div className="grid md:grid-cols-12 gap-8">
-          {/* Прогресс */}
-          <div className="md:col-span-7 space-y-6">
-            <h2 className="text-3xl font-semibold">Твой прогресс</h2>
-            {progress.map((course, i) => (
-              <Card key={i} className="bg-slate-900 border-slate-700 p-6">
-                <div className="flex justify-between mb-3">
-                  <span className="font-medium">{course.name}</span>
-                  <span className="font-bold text-cyan-400">{course.percent}%</span>
+          <div className="flex-1 pt-3">
+            {editing ? (
+              <div className="space-y-4">
+                <Input
+                  value={profile.full_name}
+                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                  placeholder="Твоё имя"
+                  className="text-3xl font-bold"
+                />
+                <textarea
+                  value={profile.status}
+                  onChange={(e) => setProfile({ ...profile, status: e.target.value })}
+                  placeholder="Статус / уровень"
+                  rows={2}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-3xl p-4 text-white"
+                />
+                <div className="flex gap-3">
+                  <Button onClick={saveProfile} className="flex items-center gap-2">
+                    <Save size={18} /> Сохранить изменения
+                  </Button>
+                  <Button variant="outline" onClick={() => setEditing(false)}>Отмена</Button>
                 </div>
-                <Progress value={course.percent} className="h-3" />
-                <Button 
-                  size="sm" 
-                  className="mt-3"
-                  onClick={() => updateProgress(i, Math.min(100, course.percent + 10))}
-                >
-                  +10% (Продолжить обучение)
-                </Button>
-              </Card>
-            ))}
-          </div>
-
-          {/* Статистика */}
-          <div className="md:col-span-5 space-y-6">
-            <Card className="bg-slate-900 border-slate-700 p-8 text-center">
-              <div className="text-7xl mb-2">🏆</div>
-              <h3 className="text-7xl font-bold text-cyan-400">{stats.hours}</h3>
-              <p className="text-slate-400 text-xl">Часов в обучении</p>
-            </Card>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="bg-slate-900 border-slate-700 p-6 text-center">
-                <div className="text-5xl mb-2">🔥</div>
-                <p className="text-5xl font-bold text-orange-400">{stats.streak}</p>
-                <p className="text-sm text-slate-400">дней подряд</p>
-              </Card>
-              <Card className="bg-slate-900 border-slate-700 p-6 text-center">
-                <div className="text-5xl mb-2">📚</div>
-                <p className="text-5xl font-bold text-emerald-400">{stats.lessons}</p>
-                <p className="text-sm text-slate-400">уроков</p>
-              </Card>
-              <Card className="bg-slate-900 border-slate-700 p-6 text-center">
-                <div className="text-5xl mb-2">⭐</div>
-                <p className="text-5xl font-bold text-yellow-400">{stats.points}</p>
-                <p className="text-sm text-slate-400">баллов</p>
-              </Card>
-            </div>
-
-            <Button onClick={() => {
-              setStats(prev => ({ ...prev, points: prev.points + 100 }));
-              alert("🎁 +100 бонусных баллов за активность!");
-            }} className="w-full py-6 text-lg">
-              Получить бонус (+100 баллов)
-            </Button>
+              </div>
+            ) : (
+              <div>
+                <h1 className="text-5xl font-bold flex items-center gap-4">
+                  Добро пожаловать, {profile.full_name || user?.email?.split('@')[0] || "Студент"}!
+                  <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                    ✏️ Изменить
+                  </Button>
+                </h1>
+                <p className="text-cyan-400 text-xl mt-1">{profile.status}</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-12 flex gap-4 justify-center">
+        {/* Кнопки действий */}
+        <div className="flex gap-4 flex-wrap mb-12">
           <Button size="lg" onClick={() => window.location.href = "/courses"}>Продолжить обучение</Button>
           <Button size="lg" variant="outline" onClick={() => window.location.href = "/quiz"}>Пройти квиз</Button>
           <Button size="lg" variant="outline" onClick={() => window.location.href = "/editor"}>Открыть редактор</Button>
         </div>
+
+        <p className="text-center text-slate-400">Остальные блоки (прогресс, статистика) можно добавить позже. Сейчас главное — редактирование профиля работает.</p>
       </div>
     </div>
   );
