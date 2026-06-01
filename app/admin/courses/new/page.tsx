@@ -15,47 +15,64 @@ export default function NewCoursePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) return alert("Заполните название и описание");
+    if (!title || !description) {
+      alert("Заполните название и описание");
+      return;
+    }
 
     setLoading(true);
 
     try {
-      let pdfUrl = null;
       let imageUrl = null;
+      let pdfUrl = null;
 
-      // Загрузка обложки (картинки)
+      // === ЗАГРУЗКА КАРТИНКИ (обложка) ===
       if (imageFile) {
-        const fileName = `images/${Date.now()}-${imageFile.name}`;
-        const { error } = await supabase.storage
+        const fileExt = imageFile.name.split(".").pop() || "jpg";
+        const safeFileName = `course-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
           .from("course-images")
-          .upload(fileName, imageFile);
-        if (error) throw error;
-        imageUrl = supabase.storage.from("course-images").getPublicUrl(fileName).data.publicUrl;
+          .upload(safeFileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        imageUrl = supabase.storage
+          .from("course-images")
+          .getPublicUrl(safeFileName).data.publicUrl;
       }
 
-      // Загрузка PDF
+      // === ЗАГРУЗКА PDF ===
       if (pdfFile) {
-        const fileName = `pdfs/${Date.now()}-${pdfFile.name}`;
-        const { error } = await supabase.storage
+        const fileExt = pdfFile.name.split(".").pop() || "pdf";
+        const safeFileName = `pdf-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
           .from("course-pdfs")
-          .upload(fileName, pdfFile);
-        if (error) throw error;
-        pdfUrl = supabase.storage.from("course-pdfs").getPublicUrl(fileName).data.publicUrl;
+          .upload(safeFileName, pdfFile);
+
+        if (uploadError) throw uploadError;
+
+        pdfUrl = supabase.storage
+          .from("course-pdfs")
+          .getPublicUrl(safeFileName).data.publicUrl;
       }
 
-      // Создаём курс
-      const { error: insertError } = await supabase.from("courses").insert({
+      // === СОЗДАНИЕ КУРСА ===
+      const { error } = await supabase.from("courses").insert({
         title,
         description,
-        pdf_url: pdfUrl,
         image_url: imageUrl,
+        pdf_url: pdfUrl,
       });
 
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       alert("✅ Курс успешно добавлен!");
       window.location.href = "/courses";
+
     } catch (err: any) {
+      console.error(err);
       alert("Ошибка: " + err.message);
     } finally {
       setLoading(false);
@@ -79,11 +96,10 @@ export default function NewCoursePage() {
                 placeholder="Описание курса..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={5}
+                rows={6}
                 className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5"
               />
 
-              {/* Обложка курса */}
               <div>
                 <label className="block text-sm mb-2">Обложка курса (картинка)</label>
                 <input
@@ -94,7 +110,6 @@ export default function NewCoursePage() {
                 />
               </div>
 
-              {/* PDF */}
               <div>
                 <label className="block text-sm mb-2">PDF файл курса (необязательно)</label>
                 <input
@@ -108,9 +123,9 @@ export default function NewCoursePage() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black"
+                className="w-full py-7 text-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold"
               >
-                {loading ? "Загружаем..." : "Создать курс"}
+                {loading ? "Загружаем файлы..." : "Создать курс"}
               </Button>
             </form>
           </CardContent>
