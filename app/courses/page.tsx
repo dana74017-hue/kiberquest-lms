@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Eye } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -82,17 +81,20 @@ export default function CoursesPage() {
               key={course.id}
               className="bg-slate-900/80 border border-slate-700 hover:border-cyan-400 transition-all duration-300 overflow-hidden group"
             >
-              {/* Обложка */}
-              {course.image_url && (
-                <div className="relative h-48 w-full">
-                  <Image
+              {/* Обложка курса */}
+              <div className="relative h-52 w-full bg-slate-800">
+                {course.image_url ? (
+                  <img
                     src={course.image_url}
                     alt={course.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-slate-700 to-slate-800">
+                    📘
+                  </div>
+                )}
+              </div>
 
               <CardContent className="p-8">
                 <h3 className="text-2xl font-semibold mb-3 group-hover:text-cyan-400 transition-colors">
@@ -100,10 +102,10 @@ export default function CoursesPage() {
                 </h3>
                 <p className="text-slate-400 line-clamp-3 mb-6">{course.description}</p>
 
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <div className="flex items-center gap-2">
                     <Eye size={18} />
-                    <span>{course.views || 0}</span>
+                    <span>{course.views || 0} просмотров</span>
                   </div>
                 </div>
 
