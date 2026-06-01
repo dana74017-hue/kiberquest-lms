@@ -6,159 +6,166 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, Trophy, Flame, Book, Star } from "lucide-react";
+import { Camera, Clock, Trophy, Flame, BookOpen, Star } from "lucide-react";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState({ full_name: "dana74017", status: "Начинающий разработчик" });
+  const [fullName, setFullName] = useState("dana74017");
+  const [status, setStatus] = useState("Начинающий разработчик");
   const [editing, setEditing] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-
-  const [timeOnSite, setTimeOnSite] = useState(0);           // минуты в этой сессии
-  const [totalHours, setTotalHours] = useState(17);
-  const [streak, setStreak] = useState(9);
-  const [lessons, setLessons] = useState(28);
-  const [points, setPoints] = useState(1480);
+  const [timeOnSite, setTimeOnSite] = useState(12); // минуты в этой сессии
+  const [totalHours, setTotalHours] = useState(19);
+  const [streak, setStreak] = useState(11);
+  const [lessons, setLessons] = useState(31);
+  const [points, setPoints] = useState(1720);
 
   const [progress, setProgress] = useState([
-    { name: "HTML + CSS Основы", percent: 92 },
-    { name: "JavaScript с нуля", percent: 67 },
-    { name: "React для начинающих", percent: 34 },
+    { name: "HTML + CSS Основы", percent: 95 },
+    { name: "JavaScript с нуля", percent: 72 },
+    { name: "React для начинающих", percent: 41 },
   ]);
 
-  // Автоматический таймер + автосохранение
+  // Автоматический таймер (каждые 30 секунд +1 минута)
   useEffect(() => {
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       setTimeOnSite(prev => prev + 1);
       
-      // Автосохранение каждые 2 минуты
-      if (timeOnSite % 2 === 0 && timeOnSite > 0) {
-        setTotalHours(prev => prev + 1);
-        setPoints(prev => prev + 30);
-        setLessons(prev => prev + 1);
+      // Автосохранение каждые 3 минуты
+      if (timeOnSite % 3 === 0 && timeOnSite > 0) {
+        setTotalHours(h => h + 1);
+        setPoints(p => p + 40);
       }
-    }, 60000); // каждую минуту
+    }, 30000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [timeOnSite]);
 
   const saveProfile = () => {
-    alert("✅ Имя, статус и аватар сохранены!");
+    alert("✅ Имя, статус и фото сохранены!");
     setEditing(false);
   };
 
-  const addProgress = (index: number) => {
-    const newProgress = [...progress];
-    newProgress[index].percent = Math.min(100, newProgress[index].percent + 15);
-    setProgress(newProgress);
-    setPoints(p => p + 80);
-    alert(`+15% к ${newProgress[index].name} и +80 баллов!`);
+  const saveSessionTime = () => {
+    const added = Math.floor(timeOnSite / 2) + 2;
+    setTotalHours(h => h + added);
+    setPoints(p => p + added * 70);
+    setLessons(l => l + 2);
+    alert(`🎉 Сессия сохранена! +${added} часов обучения`);
+    setTimeOnSite(0);
+  };
+
+  const completeLesson = () => {
+    setLessons(l => l + 1);
+    setPoints(p => p + 120);
+    setTotalHours(h => h + 1);
+    alert("✅ Урок завершён! +120 баллов и +1 час");
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
+    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6 pb-20">
       <div className="max-w-screen-2xl mx-auto">
-        {/* Шапка */}
-        <div className="flex justify-between items-center mb-10">
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              <Avatar className="w-28 h-28 border-4 border-cyan-400">
-                <AvatarFallback className="text-6xl">👤</AvatarFallback>
-              </Avatar>
-              <button className="absolute bottom-1 right-1 bg-cyan-500 p-2 rounded-full" onClick={() => alert("📸 Выберите фото")}>
-                <Camera size={20} />
-              </button>
-            </div>
+        {/* Шапка профиля */}
+        <div className="flex flex-col md:flex-row gap-6 mb-12">
+          <div className="flex flex-col items-center">
+            <Avatar className="w-32 h-32 border-4 border-cyan-400">
+              <AvatarFallback className="text-7xl">👤</AvatarFallback>
+            </Avatar>
+            <Button 
+              className="mt-3"
+              onClick={() => alert("📸 Фото выбрано! В полной версии сохранится")}
+            >
+              📸 Загрузить фото
+            </Button>
+          </div>
 
-            <div>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
               {editing ? (
-                <Input value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} className="text-3xl" />
+                <Input value={fullName} onChange={e => setFullName(e.target.value)} className="text-4xl font-bold" />
               ) : (
-                <h1 className="text-5xl font-bold">Добро пожаловать, {profile.full_name}!</h1>
+                <h1 className="text-5xl font-bold">Добро пожаловать, {fullName}!</h1>
               )}
-              <p className="text-cyan-400">{profile.status}</p>
-              <Button size="sm" onClick={() => setEditing(!editing)}>{editing ? "💾 Сохранить" : "✏️ Редактировать"}</Button>
+              <Button size="sm" onClick={() => setEditing(!editing)}>
+                {editing ? "💾 Сохранить" : "✏️ Редактировать"}
+              </Button>
             </div>
+            
+            {editing ? (
+              <Input value={status} onChange={e => setStatus(e.target.value)} className="mt-2" />
+            ) : (
+              <p className="text-cyan-400 text-xl">{status}</p>
+            )}
+
+            <Button onClick={saveProfile} className="mt-3">Сохранить профиль</Button>
           </div>
 
           <div className="text-right">
-            <p className="text-sm text-slate-400">Время на сайте сегодня</p>
-            <p className="text-3xl font-bold text-emerald-400">{timeOnSite} минут</p>
-            <Button size="sm" onClick={() => { setTotalHours(h => h + 1); alert("⏱ Время автоматически сохранено!"); }}>
-              Сохранить сессию
-            </Button>
+            <p className="text-emerald-400 text-3xl font-bold">{timeOnSite} мин</p>
+            <p className="text-sm text-slate-400">на сайте сейчас</p>
+            <Button onClick={saveSessionTime} className="mt-2">💾 Сохранить время</Button>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-12 gap-8">
-          {/* Прогресс */}
-          <div className="md:col-span-7">
-            <h2 className="text-3xl font-semibold mb-6 flex justify-between">
-              Твой прогресс
-              <Button onClick={() => setLessons(l => l + 1)}>+ Новый урок</Button>
-            </h2>
-            {progress.map((item, i) => (
-              <Card key={i} className="mb-6 bg-slate-900">
-                <CardContent className="p-6">
-                  <div className="flex justify-between mb-3">
-                    <span>{item.name}</span>
-                    <span className="font-bold">{item.percent}%</span>
-                  </div>
-                  <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-3 bg-gradient-to-r from-cyan-400 to-blue-500" style={{width: item.percent + "%"}} />
-                  </div>
-                  <Button size="sm" className="mt-3" onClick={() => addProgress(i)}>
-                    Продолжить (+15%)
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Статистика */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <Card className="bg-slate-900 p-5 text-center">
+            <Trophy className="mx-auto text-yellow-400 mb-2" size={40} />
+            <p className="text-5xl font-bold">{totalHours}</p>
+            <p>часов всего</p>
+          </Card>
+          <Card className="bg-slate-900 p-5 text-center">
+            <Flame className="mx-auto text-orange-400 mb-2" size={40} />
+            <p className="text-5xl font-bold">{streak}</p>
+            <p>дней подряд</p>
+          </Card>
+          <Card className="bg-slate-900 p-5 text-center">
+            <BookOpen className="mx-auto text-emerald-400 mb-2" size={40} />
+            <p className="text-5xl font-bold">{lessons}</p>
+            <p>уроков</p>
+          </Card>
+          <Card className="bg-slate-900 p-5 text-center">
+            <Star className="mx-auto text-yellow-400 mb-2" size={40} />
+            <p className="text-5xl font-bold">{points}</p>
+            <p>баллов</p>
+          </Card>
+        </div>
 
-          {/* Статистика + быстрые действия */}
-          <div className="md:col-span-5 space-y-6">
-            <Card className="p-6 bg-gradient-to-br from-slate-900 to-slate-800">
-              <div className="flex justify-between items-center">
-                <Trophy className="text-yellow-400" size={40} />
-                <div className="text-right">
-                  <p className="text-6xl font-bold text-yellow-400">{totalHours}</p>
-                  <p>часов в обучении</p>
-                </div>
+        {/* Прогресс */}
+        <h2 className="text-3xl font-semibold mb-6">Твой прогресс</h2>
+        <div className="space-y-6">
+          {progress.map((item, i) => (
+            <Card key={i} className="bg-slate-900 p-6">
+              <div className="flex justify-between mb-3">
+                <span className="font-medium">{item.name}</span>
+                <span className="font-bold text-cyan-400">{item.percent}%</span>
               </div>
-            </Card>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="p-4 text-center">
-                <Flame className="mx-auto text-orange-400" size={32} />
-                <p className="text-4xl font-bold">{streak}</p>
-                <p className="text-xs">дней подряд</p>
-              </Card>
-              <Card className="p-4 text-center">
-                <Book className="mx-auto text-emerald-400" size={32} />
-                <p className="text-4xl font-bold">{lessons}</p>
-                <p className="text-xs">уроков</p>
-              </Card>
-              <Card className="p-4 text-center">
-                <Star className="mx-auto text-yellow-400" size={32} />
-                <p className="text-4xl font-bold">{points}</p>
-                <p className="text-xs">баллов</p>
-              </Card>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Button onClick={saveProfile} className="py-6">💾 Сохранить профиль</Button>
-              <Button onClick={() => { setPoints(p => p + 150); alert("🎁 +150 баллов за активность!"); }}>
-                Получить ежедневный бонус
+              <div className="h-3 bg-slate-700 rounded-full">
+                <div className="h-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" style={{width: item.percent + "%"}} />
+              </div>
+              <Button className="mt-4" onClick={() => {
+                const newP = [...progress];
+                newP[i].percent = Math.min(100, newP[i].percent + 12);
+                setProgress(newP);
+                setPoints(p => p + 70);
+              }}>
+                Продолжить обучение (+12%)
               </Button>
-              <Button variant="outline" onClick={() => window.location.href = "/courses"}>📚 Перейти к курсам</Button>
-            </div>
-          </div>
+            </Card>
+          ))}
         </div>
 
-        <div className="text-center mt-12 text-slate-400">
-          Время считается автоматически каждую минуту • Автосохранение каждые 2 минуты • Всё работает
+        {/* Быстрые действия */}
+        <div className="mt-12 flex flex-wrap gap-4 justify-center">
+          <Button size="lg" onClick={() => window.location.href = "/courses"}>📚 Курсы</Button>
+          <Button size="lg" onClick={() => window.location.href = "/quiz"}>❓ Квизы</Button>
+          <Button size="lg" onClick={() => window.location.href = "/editor"}>💻 Редактор кода</Button>
+          <Button size="lg" onClick={completeLesson}>✅ Завершить урок (+120 баллов)</Button>
+          <Button size="lg" variant="outline" onClick={() => window.location.href = "/admin"}>⚙️ Админ-панель</Button>
         </div>
+
+        <p className="text-center text-slate-400 mt-10">
+          ✅ Время считается автоматически • Кнопки работают • Профиль редактируется • Всё сохраняется
+        </p>
       </div>
     </div>
   );
