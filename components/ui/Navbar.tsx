@@ -129,77 +129,109 @@ export default function Navbar() {
         </div>
 
         {/* Мобильное меню */}
-        <div className="md:hidden">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-slate-950 w-72">
-              <div className="flex flex-col gap-6 mt-8">
-                {/* Пользователь в мобильном меню */}
-                {user && (
-                  <div className="px-2 pb-4 border-b border-slate-800">
-                    <p className="text-sm text-slate-400">{user.email}</p>
-                    <Button 
-                      variant="ghost" 
-                      onClick={handleLogout} 
-                      className="mt-2 text-red-400 hover:text-red-500 w-full justify-start"
-                    >
-                      <LogOut size={18} className="mr-2" /> Выйти
-                    </Button>
-                  </div>
-                )}
+<div className="md:hidden">
+  <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <SheetTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <Menu className="w-6 h-6" />
+      </Button>
+    </SheetTrigger>
 
-                {/* Ссылки */}
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`text-lg ${pathname === link.href ? "text-cyan-400 font-medium" : "text-slate-200"}`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+    <SheetContent side="right" className="bg-slate-950 w-80 p-0">
+      <div className="flex flex-col h-full">
+        
+        {/* Верхняя часть с пользователем */}
+        {user && (
+          <div className="px-6 pt-8 pb-6 border-b border-slate-800">
+            <p className="text-sm text-slate-400 truncate">{user.email}</p>
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout} 
+              className="mt-3 -ml-3 text-red-400 hover:text-red-500 hover:bg-red-950/50"
+            >
+              <LogOut size={18} className="mr-2" /> Выйти
+            </Button>
+          </div>
+        )}
 
-                {isAdminOrTeacher && (
-                  <Link href="/admin" onClick={() => setIsOpen(false)} className="text-lg text-purple-400">
-                    ⚙️ Админ-панель
-                  </Link>
-                )}
+        {/* Навигация */}
+        <div className="px-2 py-4">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center px-4 py-3 text-lg rounded-xl mx-2 my-1 transition-colors ${
+                pathname === link.href 
+                  ? "bg-slate-900 text-cyan-400 font-medium" 
+                  : "text-slate-200 hover:bg-slate-900"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
 
-                {/* Язык и тема в мобильном */}
-                <div className="pt-4 border-t border-slate-800 space-y-4">
-                  <div>
-                    <p className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Globe size={16} /> Язык
-                    </p>
-                    <div className="flex gap-2">
-                      {languages.map((lang) => (
-                        <Button key={lang.code} variant="outline" size="sm" onClick={() => changeLanguage(lang.code)}>
-                          {lang.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-400 mb-2">Тема</p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                      className="w-full justify-start"
-                    >
-                      {theme === "dark" ? "☀️ Светлая тема" : "🌙 Тёмная тема"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          {isAdminOrTeacher && (
+            <Link
+              href="/admin"
+              onClick={() => setIsOpen(false)}
+              className={`flex items-center px-4 py-3 text-lg rounded-xl mx-2 my-1 transition-colors ${
+                pathname.startsWith("/admin") 
+                  ? "bg-purple-950 text-purple-400 font-medium" 
+                  : "text-purple-300 hover:bg-purple-950/50"
+              }`}
+            >
+              ⚙️ Админ-панель
+            </Link>
+          )}
         </div>
+
+        {/* Нижняя часть — Язык и Тема */}
+        <div className="mt-auto border-t border-slate-800 px-6 py-6 space-y-6">
+          
+          {/* Язык */}
+          <div>
+            <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+              <Globe size={16} /> Язык
+            </div>
+            <div className="flex gap-2">
+              {[
+                { code: "ru", label: "Рус" },
+                { code: "en", label: "Eng" },
+                { code: "kz", label: "Қаз" },
+              ].map((lang) => (
+                <Button
+                  key={lang.code}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changeLanguage(lang.code)}
+                  className="flex-1"
+                >
+                  {lang.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Тема */}
+          <div>
+            <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+              Тема
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-full justify-start"
+            >
+              {theme === "dark" ? "☀️ Светлая тема" : "🌙 Тёмная тема"}
+            </Button>
+          </div>
+        </div>
+
+      </div>
+    </SheetContent>
+  </Sheet>
+</div>
       </div>
     </nav>
   );
