@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/ui/Navbar";
-
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
-
-export const metadata: Metadata = {
-  title: "KiberQuest LMS",
-  description: "Интерактивная образовательная платформа",
-};
+import Navbar from "@/components/ui/Navbar";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -16,12 +8,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
-      <body className={`${inter.className} bg-slate-950 text-white`}>
-        <Navbar />
-        <main className="min-h-screen pt-16">
+    <html lang="ru" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <Navbar />
           {children}
-        </main>
+        </ThemeProvider>
       </body>
     </html>
   );
