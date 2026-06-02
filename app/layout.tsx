@@ -1,12 +1,8 @@
-import "./globals.css";
-import Navbar from "@/components/ui/Navbar";
+import dynamic from 'next/dynamic'
 import { ThemeProvider } from "@/components/ThemeProvider";
+const Navbar = dynamic(() => import('@/components/ui/Navbar'), { ssr: false })
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
       <body>
@@ -16,5 +12,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
