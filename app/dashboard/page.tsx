@@ -280,7 +280,7 @@ export default function DashboardPage() {
           <div className="flex flex-col items-center gap-3">
             <label
               htmlFor="avatarInput"
-              className="w-40 h-40 rounded-full border-4 border-cyan-400 shadow-xl bg-slate-800 flex items-center justify-content-center text-7xl overflow-hidden cursor-pointer relative group"
+              className="w-40 h-40 rounded-full border-4 border-cyan-400 shadow-xl bg-slate-800 flex items-center justify-center text-7xl overflow-hidden cursor-pointer relative group"
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
@@ -330,12 +330,16 @@ export default function DashboardPage() {
               disabled={!editing}
               className="text-cyan-400 text-xl bg-transparent border-none outline-none w-full disabled:cursor-default"
             />
-            <button
-              onClick={saveProfile}
-              className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition"
-            >
-              <Save size={18} /> Сохранить профиль
-            </button>
+
+            {/* Кнопка сохранения появляется только в режиме редактирования */}
+            {editing && (
+              <button
+                onClick={saveProfile}
+                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition"
+              >
+                <Save size={18} /> Сохранить профиль
+              </button>
+            )}
           </div>
 
           {/* Таймер */}
