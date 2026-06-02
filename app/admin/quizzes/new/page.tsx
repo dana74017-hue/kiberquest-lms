@@ -12,8 +12,8 @@ type QuestionType = "text" | "image";
 interface Question {
   type: QuestionType;
   question: string;
-  options: string[];           // текст вариантов
-  optionImages: string[];      // url картинок (для типа image)
+  options: string[];
+  optionImages: string[];
   correctIndex: number;
 }
 
@@ -32,7 +32,6 @@ export default function NewQuizPage() {
   ]);
   const [loading, setLoading] = useState(false);
 
-  // Добавить новый вопрос
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -51,12 +50,10 @@ export default function NewQuizPage() {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  // Изменить тип вопроса
   const changeQuestionType = (index: number, type: QuestionType) => {
     const updated = [...questions];
     updated[index].type = type;
 
-    // При смене типа подстраиваем количество вариантов
     if (type === "image" && updated[index].options.length < 2) {
       updated[index].options = ["", ""];
       updated[index].optionImages = ["", ""];
@@ -64,7 +61,6 @@ export default function NewQuizPage() {
     setQuestions(updated);
   };
 
-  // Добавить вариант ответа
   const addOption = (qIndex: number) => {
     const updated = [...questions];
     updated[qIndex].options.push("");
@@ -74,17 +70,15 @@ export default function NewQuizPage() {
     setQuestions(updated);
   };
 
-  // Удалить вариант ответа
   const removeOption = (qIndex: number, optIndex: number) => {
     const updated = [...questions];
-    if (updated[qIndex].options.length <= 2) return; // минимум 2 варианта
+    if (updated[qIndex].options.length <= 2) return;
 
     updated[qIndex].options.splice(optIndex, 1);
     if (updated[qIndex].type === "image") {
       updated[qIndex].optionImages.splice(optIndex, 1);
     }
 
-    // Если удалили правильный ответ — сбрасываем на первый
     if (updated[qIndex].correctIndex >= updated[qIndex].options.length) {
       updated[qIndex].correctIndex = 0;
     }
@@ -103,14 +97,20 @@ export default function NewQuizPage() {
     setQuestions(updated);
   };
 
+  // === ИСПРАВЛЕНО: теперь без мутации ===
   const updateOptionImage = (qIndex: number, optIndex: number, file: File | null) => {
-    // Просто сохраняем File во временный массив (загрузим позже)
     const updated = [...questions];
-    // Используем специальное поле для временного хранения файлов
-    if (!(updated[qIndex] as any).imageFiles) {
-      (updated[qIndex] as any).imageFiles = [];
+    const current = { ...updated[qIndex] } as any;
+
+    if (!current.imageFiles) {
+      current.imageFiles = [];
     }
-    (updated[qIndex] as any).imageFiles[optIndex] = file;
+
+    // Создаём новый массив, чтобы React увидел изменение
+    current.imageFiles = [...current.imageFiles];
+    current.imageFiles[optIndex] = file;
+
+    updated[qIndex] = current;
     setQuestions(updated);
   };
 
@@ -122,7 +122,7 @@ export default function NewQuizPage() {
     setLoading(true);
 
     try {
-      // 1. Загружаем обложку квиза (если есть)
+      // 1. Обложка квиза
       let quizImageUrl = null;
       if (imageFile) {
         const fileName = `quiz-cover-${Date.now()}-${imageFile.name}`;
@@ -134,24 +134,22 @@ export default function NewQuizPage() {
       // 2. Создаём квиз
       const { data: quiz, error: quizError } = await supabase
         .from("quizzes")
-        .insert({
-          title,
-          description,
-          image_url: quizImageUrl,
-        })
+        .insert({ title, description, image_url: quizImageUrl })
         .select()
         .single();
 
       if (quizError) throw quizError;
 
-      // 3. Загружаем картинки для вопросов типа "image"
+      // 3. Загружаем картинки вариантов
       const finalQuestions = await Promise.all(
         questions.map(async (q, qIndex) => {
           let optionImagesUrls: string[] = [];
 
-          if (q.type === "image" && (q as any).imageFiles) {
+          const imageFiles = (q as any).imageFiles || [];
+
+          if (q.type === "image" && imageFiles.length > 0) {
             optionImagesUrls = await Promise.all(
-              (q as any).imageFiles.map(async (file: File | null, i: number) => {
+              imageFiles.map(async (file: File | null, i: number) => {
                 if (!file) return "";
                 const fileName = `quiz-option-${quiz.id}-${qIndex}-${i}-${Date.now()}`;
                 const { error } = await supabase.storage.from("course-images").upload(fileName, file);
@@ -173,13 +171,10 @@ export default function NewQuizPage() {
       );
 
       // 4. Сохраняем вопросы
-      const { error: questionsError } = await supabase
-        .from("quiz_questions")
-        .insert(finalQuestions);
+      const { error: qError } = await supabase.from("quiz_questions").insert(finalQuestions);
+      if (qError) throw qError;
 
-      if (questionsError) throw questionsError;
-
-      alert("✅ Квиз с вопросами успешно создан!");
+      alert("✅ Квиз успешно создан!");
       window.location.href = "/quiz";
     } catch (err: any) {
       alert("Ошибка: " + err.message);
@@ -196,27 +191,14 @@ export default function NewQuizPage() {
         <Card className="bg-slate-900 border-slate-700">
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-10">
-              {/* Основная информация квиза */}
-              <Input
-                placeholder="Название квиза"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-xl"
-              />
-              <textarea
-                placeholder="Описание квиза"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5"
-              />
+              <Input placeholder="Название квиза" value={title} onChange={(e) => setTitle(e.target.value)} className="text-xl" />
+              <textarea placeholder="Описание квиза" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5" />
 
               <div>
                 <label className="block text-sm mb-2">Обложка квиза</label>
                 <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
               </div>
 
-              {/* Вопросы */}
               <div className="space-y-8">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-semibold">Вопросы</h2>
@@ -231,11 +213,7 @@ export default function NewQuizPage() {
                       <div className="flex justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Вопрос {qIndex + 1}</span>
-                          <select
-                            value={q.type}
-                            onChange={(e) => changeQuestionType(qIndex, e.target.value as QuestionType)}
-                            className="bg-slate-700 text-white px-3 py-1 rounded-lg text-sm"
-                          >
+                          <select value={q.type} onChange={(e) => changeQuestionType(qIndex, e.target.value as QuestionType)} className="bg-slate-700 text-white px-3 py-1 rounded-lg text-sm">
                             <option value="text">Текст</option>
                             <option value="image">Выбор картинки</option>
                           </select>
@@ -245,52 +223,25 @@ export default function NewQuizPage() {
                         </Button>
                       </div>
 
-                      <Input
-                        placeholder="Текст вопроса"
-                        value={q.question}
-                        onChange={(e) => updateQuestion(qIndex, "question", e.target.value)}
-                        className="mb-6"
-                      />
+                      <Input placeholder="Текст вопроса" value={q.question} onChange={(e) => updateQuestion(qIndex, "question", e.target.value)} className="mb-6" />
 
-                      {/* Варианты ответов */}
                       <div className="space-y-4">
                         {q.options.map((option, optIndex) => (
                           <div key={optIndex} className="flex gap-3 items-start">
-                            <input
-                              type="radio"
-                              name={`correct-${qIndex}`}
-                              checked={q.correctIndex === optIndex}
-                              onChange={() => updateQuestion(qIndex, "correctIndex", optIndex)}
-                              className="mt-3"
-                            />
+                            <input type="radio" name={`correct-${qIndex}`} checked={q.correctIndex === optIndex} onChange={() => updateQuestion(qIndex, "correctIndex", optIndex)} className="mt-3" />
 
                             {q.type === "text" ? (
-                              <Input
-                                placeholder={`Вариант ${optIndex + 1}`}
-                                value={option}
-                                onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                                className="flex-1"
-                              />
+                              <Input placeholder={`Вариант ${optIndex + 1}`} value={option} onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} className="flex-1" />
                             ) : (
                               <div className="flex-1 space-y-2">
                                 <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
-                                  <ImageIcon size={16} />
-                                  Картинка варианта {optIndex + 1}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) updateOptionImage(qIndex, optIndex, file);
-                                    }}
-                                  />
+                                  <ImageIcon size={16} /> Картинка {optIndex + 1}
+                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) updateOptionImage(qIndex, optIndex, file);
+                                  }} />
                                 </label>
-                                <Input
-                                  placeholder="Подпись (необязательно)"
-                                  value={option}
-                                  onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                                />
+                                <Input placeholder="Подпись (необязательно)" value={option} onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} />
                               </div>
                             )}
 
