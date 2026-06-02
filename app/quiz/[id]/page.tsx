@@ -95,7 +95,7 @@ export default function TakeQuizPage() {
                           <img 
                             src={img} 
                             alt="" 
-                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0" 
+                            className="w-28 h-28 object-cover rounded-xl flex-shrink-0 border border-slate-600" 
                           />
                         )}
                         <span className="flex-1">{option || (img ? "Вариант " + (optIndex + 1) : "")}</span>
