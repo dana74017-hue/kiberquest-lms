@@ -78,7 +78,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-4 py-2 rounded-lg transition-colors hover:bg-muted ${
+              className={`px-5 py-2.5 rounded-lg text-base transition-colors hover:bg-muted ${
                 pathname === link.href 
                   ? "text-primary font-medium" 
                   : "text-foreground/80"
@@ -91,7 +91,7 @@ export default function Navbar() {
           {isAdminOrTeacher && (
             <Link
               href="/admin"
-              className="px-4 py-2 rounded-lg hover:bg-muted text-purple-400"
+              className="px-5 py-2.5 rounded-lg text-base hover:bg-muted text-purple-400"
             >
               ⚙️ Админ
             </Link>
@@ -106,7 +106,7 @@ export default function Navbar() {
               <button
                 key={lang.code}
                 onClick={() => changeLanguage(lang.code)}
-                className="px-3 py-1.5 text-sm rounded-lg hover:bg-background transition"
+                className="px-5 py-2 text-base rounded-lg hover:bg-background transition"
               >
                 {lang.label}
               </button>
@@ -116,11 +116,11 @@ export default function Navbar() {
           {/* Тема */}
           <Button
             variant="ghost"
-            size="icon"
+            size="lg"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-11 w-11"
+            className="h-12 w-12"
           >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === "dark" ? <Sun size={22} /> : <Moon size={22} />}
           </Button>
 
           {/* Пользователь */}
@@ -131,16 +131,16 @@ export default function Navbar() {
               </span>
               <Button 
                 variant="ghost" 
-                size="icon" 
+                size="lg" 
                 onClick={handleLogout} 
-                className="text-red-500"
+                className="text-red-500 h-12 w-12"
               >
-                <LogOut size={18} />
+                <LogOut size={20} />
               </Button>
             </div>
           ) : (
             <Link href="/login">
-              <Button>Войти</Button>
+              <Button size="lg">Войти</Button>
             </Link>
           )}
         </div>
@@ -149,8 +149,8 @@ export default function Navbar() {
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11">
-                <Menu className="w-6 h-6" />
+              <Button variant="ghost" size="lg" className="h-12 w-12">
+                <Menu className="w-7 h-7" />
               </Button>
             </SheetTrigger>
 
@@ -160,11 +160,11 @@ export default function Navbar() {
                 {/* Пользователь */}
                 {user && (
                   <div className="px-6 pb-6 border-b">
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-base text-muted-foreground">{user.email}</p>
                     <Button 
                       variant="ghost" 
                       onClick={handleLogout} 
-                      className="mt-2 text-red-500"
+                      className="mt-3 text-red-500 text-lg"
                     >
                       Выйти
                     </Button>
@@ -178,7 +178,7 @@ export default function Navbar() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center px-4 py-4 text-lg rounded-xl hover:bg-muted"
+                      className="flex items-center px-5 py-5 text-xl rounded-2xl hover:bg-muted"
                     >
                       {link.label}
                     </Link>
@@ -188,7 +188,7 @@ export default function Navbar() {
                     <Link
                       href="/admin"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center px-4 py-4 text-lg rounded-xl text-purple-400 hover:bg-muted"
+                      className="flex items-center px-5 py-5 text-xl rounded-2xl text-purple-400 hover:bg-muted"
                     >
                       ⚙️ Админ-панель
                     </Link>
@@ -196,19 +196,19 @@ export default function Navbar() {
                 </div>
 
                 {/* Язык + Тема */}
-                <div className="mt-auto p-6 border-t space-y-4">
+                <div className="mt-auto p-6 border-t space-y-6">
                   <div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                      <Globe size={18} /> Язык
+                    <div className="flex items-center gap-2 text-base text-muted-foreground mb-4">
+                      <Globe size={20} /> Язык
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       {languages.map((lang: Language) => (
                         <Button
                           key={lang.code}
                           variant="outline"
-                          size="sm"
+                          size="lg"
                           onClick={() => changeLanguage(lang.code)}
-                          className="flex-1"
+                          className="flex-1 py-6 text-base"
                         >
                           {lang.label}
                         </Button>
@@ -218,7 +218,8 @@ export default function Navbar() {
 
                   <Button
                     variant="outline"
-                    className="w-full justify-start"
+                    size="lg"
+                    className="w-full justify-start py-6 text-base"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   >
                     {theme === "dark" ? "☀️ Светлая тема" : "🌙 Тёмная тема"}
