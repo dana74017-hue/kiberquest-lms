@@ -5,9 +5,18 @@ const locales = ['ru', 'en', 'kz']
 const defaultLocale = 'ru'
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const pathname = request.nextUrl.pathname
 
-  // Если уже есть язык в URL — ничего не делаем
+  // Пропускаем API и служебные файлы
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.includes('.')
+  ) {
+    return
+  }
+
+  // Проверяем, есть ли язык в начале пути
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
@@ -20,7 +29,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
