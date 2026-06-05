@@ -18,10 +18,10 @@ export default function RootLayout({
   return (
     <html 
       lang="ru" 
-      className={spaceGrotesk.variable} 
+      className={spaceGrotesk.variable}
       suppressHydrationWarning
     >
-      <body>
+      <body className="font-sans">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
