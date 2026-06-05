@@ -21,10 +21,11 @@ export default function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  // Получаем текущий язык из URL более надёжным способом
+  // Получаем текущий язык из URL
   const getCurrentLocale = () => {
     const segments = pathname.split("/");
-    return segments[1] || "ru";
+    const lang = segments[1];
+    return ["ru", "en", "kz"].includes(lang) ? lang : "ru";
   };
 
   const currentLocale = getCurrentLocale();
@@ -64,14 +65,14 @@ export default function Navbar() {
     window.location.href = `/${currentLocale}`;
   };
 
-  // Улучшенная функция смены языка
   const changeLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
-    segments[1] = newLocale; // заменяем язык
+    if (segments.length > 1) {
+      segments[1] = newLocale;
+    }
     const newPath = segments.join("/");
-
     window.location.href = newPath;
     setIsOpen(false);
   };
@@ -119,7 +120,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Правая часть */}
+        {/* Правая часть десктопа */}
         <div className="hidden md:flex items-center gap-3">
           {/* Язык */}
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
@@ -129,7 +130,7 @@ export default function Navbar() {
                 onClick={() => changeLanguage(lang.code)}
                 className={`px-4 py-2 text-sm rounded-lg transition ${
                   currentLocale === lang.code 
-                    ? "bg-background text-foreground font-medium" 
+                    ? "bg-background text-foreground font-medium shadow-sm" 
                     : "hover:bg-background text-muted-foreground"
                 }`}
               >
@@ -184,7 +185,11 @@ export default function Navbar() {
                 {user && (
                   <div className="px-6 pb-6 border-b">
                     <p className="text-base text-muted-foreground">{user.email}</p>
-                    <Button variant="ghost" onClick={handleLogout} className="mt-3 text-red-500 text-lg">
+                    <Button 
+                      variant="ghost" 
+                      onClick={handleLogout} 
+                      className="mt-3 text-red-500 text-lg"
+                    >
                       Выйти
                     </Button>
                   </div>

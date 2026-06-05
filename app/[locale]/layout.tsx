@@ -1,5 +1,6 @@
 import Navbar from "@/components/ui/Navbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { Space_Grotesk } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
@@ -26,8 +27,10 @@ export default function LocaleLayout({
           defaultTheme="dark"
           enableSystem={false}
         >
-          <Navbar />
-          {children}
+          <LanguageProvider>
+            <Navbar />
+            {children}
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
