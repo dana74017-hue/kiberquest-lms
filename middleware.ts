@@ -1,31 +1,20 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const locales = ['ru', 'en', 'kz']
-const defaultLocale = 'ru'
-
 export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+  const { pathname } = request.nextUrl
 
-  // Пропускаем API и служебные файлы
+  // Если уже есть язык — ничего не делаем
   if (
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next') ||
-    pathname.includes('.')
+    pathname.startsWith('/ru') ||
+    pathname.startsWith('/en') ||
+    pathname.startsWith('/kz')
   ) {
     return
   }
 
-  // Проверяем, есть ли язык в начале пути
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  )
-
-  if (pathnameHasLocale) return
-
-  // Редиректим на /ru + текущий путь
-  const newUrl = new URL(`/${defaultLocale}${pathname}`, request.url)
-  return NextResponse.redirect(newUrl)
+  // Редиректим всё остальное на /ru
+  return NextResponse.redirect(new URL(`/ru${pathname}`, request.url))
 }
 
 export const config = {
