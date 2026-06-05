@@ -66,13 +66,11 @@ export default function Navbar() {
     router.push(`/${currentLocale}`);
   };
 
-  // Улучшенная смена языка
   const changeLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
     
-    // Если путь слишком короткий, добавляем язык
     if (segments.length < 2) {
       router.push(`/${newLocale}`);
     } else {

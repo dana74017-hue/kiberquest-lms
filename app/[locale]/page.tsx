@@ -1,4 +1,11 @@
+"use client";
+
+import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+
 export default function Home() {
+  const { locale, t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
@@ -6,45 +13,42 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-3xl text-sm font-medium">
-              Для школьников и студентов
+              {t("home.badge")}
             </div>
 
-            <h1 className="text-6xl md:text-7xl font-bold leading-none tracking-tighter">
-              Учи веб-разработку<br />и IT с удовольствием
+            <h1 className="text-6xl md:text-7xl font-bold leading-none tracking-tighter whitespace-pre-line">
+              {t("home.title")}
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-lg">
-              KiberQuest LMS — это современная образовательная платформа, 
-              где ты можешь учиться веб-разработке через практику. 
-              Живой редактор кода, интерактивные квизы, отслеживание прогресса 
-              и удобный личный кабинет.
+              {t("home.description")}
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <a 
-                href="/courses" 
+              <Link 
+                href={`/${locale}/courses`} 
                 className="px-10 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-3xl text-lg inline-flex items-center gap-3 transition"
               >
-                Начать обучение бесплатно
-              </a>
-              <a 
-                href="/editor" 
+                {t("home.startLearning")}
+              </Link>
+              <Link 
+                href={`/${locale}/editor`} 
                 className="px-10 py-6 border border-border hover:bg-muted font-semibold rounded-3xl text-lg transition"
               >
-                Попробовать редактор
-              </a>
+                {t("home.tryEditor")}
+              </Link>
             </div>
 
             <div className="flex items-center gap-8 text-sm text-muted-foreground pt-4">
-              <div>✓ Более 50 уроков</div>
-              <div>✓ Живой редактор кода</div>
-              <div>✓ Мгновенная обратная связь</div>
+              <div>✓ {t("home.features.lessons")}</div>
+              <div>✓ {t("home.features.editor")}</div>
+              <div>✓ {t("home.features.feedback")}</div>
             </div>
           </div>
 
           {/* Превью редактора */}
-          <div className="bg-card border border-border rounded-3xl p-8 shadow-xl">
-            <div className="bg-muted rounded-2xl p-6 font-mono text-sm leading-relaxed text-foreground">
+          <div className="bg-card border border-border rounded-3xl p-8">
+            <div className="bg-muted rounded-2xl p-6 font-mono text-sm leading-relaxed">
               &lt;h1 style="color: #22d3ee"&gt;Привет, KiberQuest!&lt;/h1&gt;<br />
               &lt;p&gt;Это твой первый сайт на платформе&lt;/p&gt;
             </div>
@@ -59,36 +63,27 @@ export default function Home() {
       <section className="py-20 bg-muted/50">
         <div className="max-w-screen-2xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Как это работает?</h2>
+            <h2 className="text-4xl font-bold mb-4">{t("home.howItWorks.title")}</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Мы сделали обучение максимально практичным и интересным
+              {t("home.howItWorks.subtitle")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-card rounded-3xl p-10 text-center border border-border">
               <div className="text-6xl mb-6">📖</div>
-              <h3 className="text-2xl font-semibold mb-4">1. Изучай теорию</h3>
-              <p className="text-muted-foreground">
-                Понятные уроки с примерами и объяснениями. 
-                Всё разложено по полочкам.
-              </p>
+              <h3 className="text-2xl font-semibold mb-4">{t("home.howItWorks.step1.title")}</h3>
+              <p className="text-muted-foreground">{t("home.howItWorks.step1.description")}</p>
             </div>
             <div className="bg-card rounded-3xl p-10 text-center border border-border">
               <div className="text-6xl mb-6">💻</div>
-              <h3 className="text-2xl font-semibold mb-4">2. Пиши код сразу</h3>
-              <p className="text-muted-foreground">
-                Встроенный редактор кода позволяет писать и проверять код 
-                прямо в браузере без установки программ.
-              </p>
+              <h3 className="text-2xl font-semibold mb-4">{t("home.howItWorks.step2.title")}</h3>
+              <p className="text-muted-foreground">{t("home.howItWorks.step2.description")}</p>
             </div>
             <div className="bg-card rounded-3xl p-10 text-center border border-border">
               <div className="text-6xl mb-6">🎯</div>
-              <h3 className="text-2xl font-semibold mb-4">3. Закрепляй знания</h3>
-              <p className="text-muted-foreground">
-                Проходи квизы, выполняй задания и отслеживай свой прогресс 
-                в личном кабинете.
-              </p>
+              <h3 className="text-2xl font-semibold mb-4">{t("home.howItWorks.step3.title")}</h3>
+              <p className="text-muted-foreground">{t("home.howItWorks.step3.description")}</p>
             </div>
           </div>
         </div>
@@ -98,25 +93,25 @@ export default function Home() {
       <section className="py-20">
         <div className="max-w-screen-2xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Почему выбирают KiberQuest?</h2>
+            <h2 className="text-4xl font-bold mb-4">{t("home.whyUs.title")}</h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-card border border-border rounded-3xl p-8">
-              <h3 className="font-semibold text-xl mb-3">Практика с первого дня</h3>
-              <p className="text-muted-foreground">Не просто теория, а сразу написание реального кода.</p>
+              <h3 className="font-semibold text-xl mb-3">{t("home.whyUs.practice.title")}</h3>
+              <p className="text-muted-foreground">{t("home.whyUs.practice.description")}</p>
             </div>
             <div className="bg-card border border-border rounded-3xl p-8">
-              <h3 className="font-semibold text-xl mb-3">Мгновенная проверка</h3>
-              <p className="text-muted-foreground">Видишь результат своей работы сразу после написания кода.</p>
+              <h3 className="font-semibold text-xl mb-3">{t("home.whyUs.feedback.title")}</h3>
+              <p className="text-muted-foreground">{t("home.whyUs.feedback.description")}</p>
             </div>
             <div className="bg-card border border-border rounded-3xl p-8">
-              <h3 className="font-semibold text-xl mb-3">Удобный личный кабинет</h3>
-              <p className="text-muted-foreground">Отслеживай прогресс, достижения и статистику обучения.</p>
+              <h3 className="font-semibold text-xl mb-3">{t("home.whyUs.cabinet.title")}</h3>
+              <p className="text-muted-foreground">{t("home.whyUs.cabinet.description")}</p>
             </div>
             <div className="bg-card border border-border rounded-3xl p-8">
-              <h3 className="font-semibold text-xl mb-3">Подходит для новичков</h3>
-              <p className="text-muted-foreground">Материал подаётся просто и понятно даже без опыта.</p>
+              <h3 className="font-semibold text-xl mb-3">{t("home.whyUs.beginners.title")}</h3>
+              <p className="text-muted-foreground">{t("home.whyUs.beginners.description")}</p>
             </div>
           </div>
         </div>
@@ -125,17 +120,16 @@ export default function Home() {
       {/* Финальный призыв к действию */}
       <section className="py-20 bg-muted/50">
         <div className="max-w-screen-2xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-6">Готов начать свой путь в IT?</h2>
+          <h2 className="text-4xl font-bold mb-6">{t("home.cta.title")}</h2>
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-            Присоединяйся к платформе и начни учиться уже сегодня. 
-            Это бесплатно и доступно с любого устройства.
+            {t("home.cta.description")}
           </p>
-          <a 
-            href="/courses" 
+          <Link 
+            href={`/${locale}/courses`} 
             className="inline-flex items-center justify-center px-12 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg rounded-3xl transition"
           >
-            Начать обучение
-          </a>
+            {t("home.cta.button")}
+          </Link>
         </div>
       </section>
 
