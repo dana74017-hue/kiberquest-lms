@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Menu, LogOut, Sun, Moon, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,10 +19,15 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("student");
   const pathname = usePathname();
-  const params = useParams();
   const { theme, setTheme } = useTheme();
 
-  const currentLocale = (params?.locale as string) || "ru";
+  // Получаем текущий язык из URL более надёжным способом
+  const getCurrentLocale = () => {
+    const segments = pathname.split("/");
+    return segments[1] || "ru";
+  };
+
+  const currentLocale = getCurrentLocale();
 
   const languages: Language[] = [
     { code: "ru", label: "Рус" },
@@ -59,10 +64,14 @@ export default function Navbar() {
     window.location.href = `/${currentLocale}`;
   };
 
-  // Правильная смена языка
+  // Улучшенная функция смены языка
   const changeLanguage = (newLocale: string) => {
-    // Заменяем текущий язык в пути на новый
-    const newPath = pathname.replace(`/${currentLocale}`, `/${newLocale}`);
+    if (newLocale === currentLocale) return;
+
+    const segments = pathname.split("/");
+    segments[1] = newLocale; // заменяем язык
+    const newPath = segments.join("/");
+
     window.location.href = newPath;
     setIsOpen(false);
   };
@@ -110,7 +119,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Правая часть десктопа */}
+        {/* Правая часть */}
         <div className="hidden md:flex items-center gap-3">
           {/* Язык */}
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
@@ -120,7 +129,7 @@ export default function Navbar() {
                 onClick={() => changeLanguage(lang.code)}
                 className={`px-4 py-2 text-sm rounded-lg transition ${
                   currentLocale === lang.code 
-                    ? "bg-background text-foreground font-medium shadow-sm" 
+                    ? "bg-background text-foreground font-medium" 
                     : "hover:bg-background text-muted-foreground"
                 }`}
               >
@@ -172,22 +181,15 @@ export default function Navbar() {
 
             <SheetContent side="right" className="bg-background w-80 p-0">
               <div className="flex flex-col h-full pt-8">
-                
-                {/* Пользователь */}
                 {user && (
                   <div className="px-6 pb-6 border-b">
                     <p className="text-base text-muted-foreground">{user.email}</p>
-                    <Button 
-                      variant="ghost" 
-                      onClick={handleLogout} 
-                      className="mt-3 text-red-500 text-lg"
-                    >
+                    <Button variant="ghost" onClick={handleLogout} className="mt-3 text-red-500 text-lg">
                       Выйти
                     </Button>
                   </div>
                 )}
 
-                {/* Навигация */}
                 <div className="px-2 py-4">
                   {navLinks.map((link) => {
                     const fullHref = link.href === "/" 
@@ -205,19 +207,8 @@ export default function Navbar() {
                       </Link>
                     );
                   })}
-
-                  {isAdminOrTeacher && (
-                    <Link
-                      href={`/${currentLocale}/admin`}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center px-5 py-5 text-xl rounded-2xl text-purple-400 hover:bg-muted"
-                    >
-                      ⚙️ Админ-панель
-                    </Link>
-                  )}
                 </div>
 
-                {/* Язык + Тема */}
                 <div className="mt-auto p-6 border-t space-y-6">
                   <div>
                     <div className="flex items-center gap-2 text-base text-muted-foreground mb-4">
