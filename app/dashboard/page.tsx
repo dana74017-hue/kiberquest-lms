@@ -14,8 +14,6 @@ import {
   Pencil,
 } from "lucide-react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 interface Course {
   name: string;
   percent: number;
@@ -28,10 +26,7 @@ interface ActionItem {
   purple: boolean;
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
 export default function DashboardPage() {
-  // Auth
   const [userId, setUserId] = useState<string | null>(null);
 
   // Profile
@@ -56,7 +51,6 @@ export default function DashboardPage() {
     { name: "Backend (Node.js)",      percent: 23, color: "bg-orange-400" },
   ]);
 
-  // Toast
   const [toastMsg, setToastMsg] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +60,7 @@ export default function DashboardPage() {
     toastTimer.current = setTimeout(() => setToastMsg(""), 3000);
   };
 
-  // ─── Load user & profile from Supabase ───────────────────────────────────
+  // ─── Load user & profile ────────────────────────────────────────────────
 
   useEffect(() => {
     const loadUser = async () => {
@@ -94,7 +88,7 @@ export default function DashboardPage() {
     loadUser();
   }, []);
 
-  // ─── Auto-timer ──────────────────────────────────────────────────────────
+  // ─── Auto-timer ─────────────────────────────────────────────────────────
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -110,19 +104,18 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, []);
 
-  // ─── Actions ─────────────────────────────────────────────────────────────
+  // ─── Upload Avatar ──────────────────────────────────────────────────────
 
   const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Локальный превью сразу
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarUrl(ev.target?.result as string);
     reader.readAsDataURL(file);
 
     if (!userId) {
-      showToast("✅ Фото загружено локально (войдите для сохранения)");
+      showToast("✅ Фото загружено локально");
       return;
     }
 
@@ -144,14 +137,15 @@ export default function DashboardPage() {
         avatar_url: data.publicUrl,
       });
 
-      showToast("✅ Фото сохранено в Supabase!");
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
-      showToast("Ошибка загрузки: " + message);
+      showToast("✅ Фото сохранено!");
+    } catch (err: any) {
+      showToast("Ошибка: " + err.message);
     } finally {
       setUploadingAvatar(false);
     }
   };
+
+  // ─── Save Profile ───────────────────────────────────────────────────────
 
   const saveProfile = async () => {
     if (userId) {
@@ -170,9 +164,11 @@ export default function DashboardPage() {
     showToast("✅ Профиль сохранён!");
   };
 
+  // ─── Actions ────────────────────────────────────────────────────────────
+
   const saveLearningTime = async () => {
     const added = Math.floor(timeOnSite / 4) + 3;
-    const newHours  = totalHours + added;
+    const newHours = totalHours + added;
     const newPoints = points + added * 85;
     const newLessons = lessons + 3;
 
@@ -195,8 +191,8 @@ export default function DashboardPage() {
 
   const completeLesson = async () => {
     const newLessons = lessons + 1;
-    const newPoints  = points + 150;
-    const newHours   = totalHours + 1;
+    const newPoints = points + 150;
+    const newHours = totalHours + 1;
 
     setLessons(newLessons);
     setPoints(newPoints);
@@ -258,8 +254,6 @@ export default function DashboardPage() {
     showToast(`🚀 Прогресс по "${courses[index].name}" +17%`);
   };
 
-  // ─── Quick actions list ───────────────────────────────────────────────────
-
   const actions: ActionItem[] = [
     { label: "📚 Перейти к курсам",  href: "/courses", purple: false },
     { label: "❓ Пройти квиз",        href: "/quiz",    purple: false },
@@ -267,10 +261,10 @@ export default function DashboardPage() {
     { label: "⚙️ Админ-панель",       href: "/admin",   purple: true  },
   ];
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6 pb-12">
+    <div className="min-h-screen bg-background text-foreground pt-20 px-6 pb-12">
       <div className="max-w-screen-xl mx-auto">
 
         {/* ── Шапка профиля ── */}
@@ -280,7 +274,7 @@ export default function DashboardPage() {
           <div className="flex flex-col items-center gap-3">
             <label
               htmlFor="avatarInput"
-              className="w-40 h-40 rounded-full border-4 border-cyan-400 shadow-xl bg-slate-800 flex items-center justify-center text-7xl overflow-hidden cursor-pointer relative group"
+              className="w-40 h-40 rounded-full border-4 border-primary shadow-xl bg-muted flex items-center justify-center text-7xl overflow-hidden cursor-pointer relative group"
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
@@ -291,17 +285,11 @@ export default function DashboardPage() {
                 <Camera className="text-white" size={28} />
               </div>
             </label>
-            <input
-              id="avatarInput"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={uploadAvatar}
-            />
+            <input id="avatarInput" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
             <button
               disabled={uploadingAvatar}
               onClick={() => document.getElementById("avatarInput")?.click()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition text-sm disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-background hover:text-foreground transition text-sm disabled:opacity-50"
             >
               <Camera size={16} />
               {uploadingAvatar ? "Загружаем..." : "📸 Загрузить фото"}
@@ -315,27 +303,26 @@ export default function DashboardPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={!editing}
-                className="text-4xl font-bold bg-transparent border-none outline-none text-white w-full disabled:cursor-default focus:border-b focus:border-cyan-400"
+                className="text-4xl font-bold bg-transparent border-none outline-none w-full disabled:cursor-default focus:border-b focus:border-primary"
               />
               <button
                 onClick={() => setEditing(!editing)}
-                className="p-2 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
+                className="p-2 rounded-lg bg-muted border border-border hover:bg-background transition"
               >
-                <Pencil size={18} className="text-slate-400" />
+                <Pencil size={18} className="text-muted-foreground" />
               </button>
             </div>
             <input
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               disabled={!editing}
-              className="text-cyan-400 text-xl bg-transparent border-none outline-none w-full disabled:cursor-default"
+              className="text-primary text-xl bg-transparent border-none outline-none w-full disabled:cursor-default"
             />
 
-            {/* Кнопка сохранения появляется только в режиме редактирования */}
             {editing && (
               <button
                 onClick={saveProfile}
-                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition"
+                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition"
               >
                 <Save size={18} /> Сохранить профиль
               </button>
@@ -345,10 +332,10 @@ export default function DashboardPage() {
           {/* Таймер */}
           <div className="text-right">
             <div className="text-emerald-400 text-4xl font-bold">{timeOnSite} мин</div>
-            <p className="text-slate-400 text-sm mb-3">на сайте сейчас</p>
+            <p className="text-muted-foreground text-sm mb-3">на сайте сейчас</p>
             <button
               onClick={saveLearningTime}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition text-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-background hover:text-foreground transition text-sm"
             >
               <Clock size={16} /> Сохранить время обучения
             </button>
@@ -363,10 +350,10 @@ export default function DashboardPage() {
             { icon: <BookOpen size={40} className="text-emerald-400 mx-auto mb-2" />, value: lessons, label: "уроков пройдено" },
             { icon: <Star   size={40} className="text-yellow-400 mx-auto mb-2" />, value: points.toLocaleString("ru-RU"), label: "баллов" },
           ].map((stat, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-700 rounded-xl p-6 text-center">
+            <div key={i} className="bg-card border border-border rounded-xl p-6 text-center">
               {stat.icon}
               <p className="text-5xl font-bold">{stat.value}</p>
-              <p className="text-slate-400 text-sm mt-1">{stat.label}</p>
+              <p className="text-muted-foreground text-sm mt-1">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -375,12 +362,12 @@ export default function DashboardPage() {
         <h2 className="text-3xl font-bold mb-6">Твой прогресс по курсам</h2>
         <div className="space-y-6 mb-12">
           {courses.map((course, index) => (
-            <div key={index} className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+            <div key={index} className="bg-card border border-border rounded-xl p-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="font-semibold text-lg">{course.name}</span>
-                <span className="font-bold text-cyan-400">{course.percent}%</span>
+                <span className="font-bold text-primary">{course.percent}%</span>
               </div>
-              <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-4 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-4 ${course.color} transition-all duration-500 rounded-full`}
                   style={{ width: `${course.percent}%` }}
@@ -389,13 +376,13 @@ export default function DashboardPage() {
               <div className="flex gap-3 mt-4 flex-wrap">
                 <button
                   onClick={() => addProgress(index)}
-                  className="px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-sm font-medium transition"
+                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition"
                 >
                   +17% (Пройти урок)
                 </button>
                 <button
                   onClick={() => showToast("Редактор открыт")}
-                  className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition border border-slate-600"
+                  className="px-4 py-2 rounded-lg bg-muted hover:bg-background text-foreground text-sm transition border border-border"
                 >
                   Открыть практику
                 </button>
@@ -413,7 +400,7 @@ export default function DashboardPage() {
               className={`h-20 text-lg rounded-xl border font-medium transition ${
                 purple
                   ? "bg-purple-700 hover:bg-purple-600 border-purple-600 text-white"
-                  : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200"
+                  : "bg-card hover:bg-muted border-border text-foreground"
               }`}
             >
               {label}
@@ -425,24 +412,24 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
           {/* Достижения */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <Award className="text-yellow-400 mb-4" size={50} />
             <h3 className="text-2xl font-bold mb-3">Достижения</h3>
-            <ul className="space-y-2 text-sm text-slate-400">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>🏆 Первый курс завершён</li>
               <li>🔥 14 дней без пропусков</li>
               <li>📌 5 квизов пройдено на 100%</li>
             </ul>
             <button
               onClick={() => showToast("Все достижения загружены")}
-              className="mt-6 w-full py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition border border-slate-600"
+              className="mt-6 w-full py-2 rounded-lg bg-muted hover:bg-background text-foreground text-sm transition border border-border"
             >
               Посмотреть все достижения
             </button>
           </div>
 
           {/* Быстрые ссылки */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="font-bold text-lg mb-4">Быстрые ссылки</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -454,7 +441,7 @@ export default function DashboardPage() {
                 <button
                   key={href}
                   onClick={() => (window.location.href = href)}
-                  className="py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-slate-700 transition"
+                  className="py-2 rounded-lg bg-muted hover:bg-background text-foreground text-sm border border-border transition"
                 >
                   {label}
                 </button>
@@ -463,12 +450,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Рейтинг */}
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 text-center">
+          <div className="bg-card border border-border rounded-xl p-6 text-center">
             <p className="text-6xl font-bold text-emerald-400">1720</p>
-            <p className="text-xl text-slate-400 mt-1">Общий рейтинг</p>
+            <p className="text-xl text-muted-foreground mt-1">Общий рейтинг</p>
             <button
               onClick={dailyBonus}
-              className="mt-6 w-full py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-medium transition"
+              className="mt-6 w-full py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition"
             >
               🎁 Получить ежедневный бонус
             </button>
@@ -477,25 +464,22 @@ export default function DashboardPage() {
 
         {/* ── Дополнительные кнопки ── */}
         <div className="flex flex-wrap gap-3 justify-center mb-12">
-          <button onClick={saveProfile}     className="px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-sm transition">💾 Сохранить профиль</button>
-          <button onClick={saveLearningTime} className="px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-sm transition">⏱ Сохранить время обучения</button>
-          <button onClick={completeLesson}  className="px-6 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-sm font-medium transition">🏆 Завершить урок (+150 баллов)</button>
+          <button onClick={saveProfile}     className="px-6 py-2 rounded-lg bg-muted hover:bg-background border border-border text-foreground text-sm transition">💾 Сохранить профиль</button>
+          <button onClick={saveLearningTime} className="px-6 py-2 rounded-lg bg-muted hover:bg-background border border-border text-foreground text-sm transition">⏱ Сохранить время обучения</button>
+          <button onClick={completeLesson}  className="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition">🏆 Завершить урок (+150 баллов)</button>
           <button onClick={increaseStreak} className="px-6 py-2 rounded-lg bg-orange-700 hover:bg-orange-600 text-white text-sm transition">🔥 Увеличить серию</button>
         </div>
 
         {/* ── Футер ── */}
-        <div className="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
-          ✅ Реальная загрузка фото в Supabase Storage &nbsp;•&nbsp; Автоматический таймер &nbsp;•&nbsp; Сохранение в БД &nbsp;•&nbsp; Все кнопки работают
-          <p className="text-xs text-slate-600 mt-2">
-            Личный кабинет полностью функциональный и готов для демонстрации
-          </p>
+        <div className="border-t border-border pt-8 text-center text-muted-foreground text-sm">
+          ✅ Реальная загрузка фото в Supabase &nbsp;•&nbsp; Автоматический таймер &nbsp;•&nbsp; Сохранение в БД &nbsp;•&nbsp; Все кнопки работают
         </div>
 
       </div>
 
       {/* ── Toast ── */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-cyan-500 text-white px-5 py-3 rounded-xl text-sm shadow-lg max-w-xs">
+        <div className="fixed bottom-6 right-6 z-50 bg-card border border-primary text-foreground px-5 py-3 rounded-xl text-sm shadow-lg max-w-xs">
           {toastMsg}
         </div>
       )}

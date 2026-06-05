@@ -80,10 +80,11 @@ export default function NewCoursePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
+    <div className="min-h-screen bg-background pt-20 px-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Добавить новый курс</h1>
-        <Card className="bg-slate-900 border-slate-700">
+
+        <Card>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <Input
@@ -97,26 +98,30 @@ export default function NewCoursePage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={6}
-                className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5"
+                className="w-full bg-muted border border-border rounded-3xl p-5"
               />
 
               <div>
-                <label className="block text-sm mb-2">Обложка курса (картинка)</label>
+                <label className="block text-sm mb-2 text-muted-foreground">
+                  Обложка курса (картинка)
+                </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-slate-300"
+                  className="block w-full text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm mb-2">PDF файл курса (необязательно)</label>
+                <label className="block text-sm mb-2 text-muted-foreground">
+                  PDF файл курса (необязательно)
+                </label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-slate-300"
+                  className="block w-full text-sm"
                 />
               </div>
 

@@ -97,16 +97,11 @@ export default function NewQuizPage() {
     setQuestions(updated);
   };
 
-  // === ИСПРАВЛЕНО: теперь без мутации ===
   const updateOptionImage = (qIndex: number, optIndex: number, file: File | null) => {
     const updated = [...questions];
     const current = { ...updated[qIndex] } as any;
 
-    if (!current.imageFiles) {
-      current.imageFiles = [];
-    }
-
-    // Создаём новый массив, чтобы React увидел изменение
+    if (!current.imageFiles) current.imageFiles = [];
     current.imageFiles = [...current.imageFiles];
     current.imageFiles[optIndex] = file;
 
@@ -144,7 +139,6 @@ export default function NewQuizPage() {
       const finalQuestions = await Promise.all(
         questions.map(async (q, qIndex) => {
           let optionImagesUrls: string[] = [];
-
           const imageFiles = (q as any).imageFiles || [];
 
           if (q.type === "image" && imageFiles.length > 0) {
@@ -184,18 +178,30 @@ export default function NewQuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
+    <div className="min-h-screen bg-background pt-20 px-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Создать новый квиз</h1>
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-10">
-              <Input placeholder="Название квиза" value={title} onChange={(e) => setTitle(e.target.value)} className="text-xl" />
-              <textarea placeholder="Описание квиза" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-slate-950 border border-slate-700 rounded-3xl p-5" />
+              <Input 
+                placeholder="Название квиза" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+                className="text-xl" 
+              />
+              
+              <textarea 
+                placeholder="Описание квиза" 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                rows={3} 
+                className="w-full bg-muted border border-border rounded-3xl p-5" 
+              />
 
               <div>
-                <label className="block text-sm mb-2">Обложка квиза</label>
+                <label className="block text-sm mb-2 text-muted-foreground">Обложка квиза</label>
                 <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
               </div>
 
@@ -208,12 +214,16 @@ export default function NewQuizPage() {
                 </div>
 
                 {questions.map((q, qIndex) => (
-                  <Card key={qIndex} className="bg-slate-800 border-slate-600">
+                  <Card key={qIndex} className="bg-card border-border">
                     <CardContent className="p-6">
                       <div className="flex justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Вопрос {qIndex + 1}</span>
-                          <select value={q.type} onChange={(e) => changeQuestionType(qIndex, e.target.value as QuestionType)} className="bg-slate-700 text-white px-3 py-1 rounded-lg text-sm">
+                          <select 
+                            value={q.type} 
+                            onChange={(e) => changeQuestionType(qIndex, e.target.value as QuestionType)} 
+                            className="bg-muted border border-border px-3 py-1 rounded-lg text-sm"
+                          >
                             <option value="text">Текст</option>
                             <option value="image">Выбор картинки</option>
                           </select>
@@ -223,25 +233,50 @@ export default function NewQuizPage() {
                         </Button>
                       </div>
 
-                      <Input placeholder="Текст вопроса" value={q.question} onChange={(e) => updateQuestion(qIndex, "question", e.target.value)} className="mb-6" />
+                      <Input 
+                        placeholder="Текст вопроса" 
+                        value={q.question} 
+                        onChange={(e) => updateQuestion(qIndex, "question", e.target.value)} 
+                        className="mb-6" 
+                      />
 
                       <div className="space-y-4">
                         {q.options.map((option, optIndex) => (
                           <div key={optIndex} className="flex gap-3 items-start">
-                            <input type="radio" name={`correct-${qIndex}`} checked={q.correctIndex === optIndex} onChange={() => updateQuestion(qIndex, "correctIndex", optIndex)} className="mt-3" />
+                            <input 
+                              type="radio" 
+                              name={`correct-${qIndex}`} 
+                              checked={q.correctIndex === optIndex} 
+                              onChange={() => updateQuestion(qIndex, "correctIndex", optIndex)} 
+                              className="mt-3" 
+                            />
 
                             {q.type === "text" ? (
-                              <Input placeholder={`Вариант ${optIndex + 1}`} value={option} onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} className="flex-1" />
+                              <Input 
+                                placeholder={`Вариант ${optIndex + 1}`} 
+                                value={option} 
+                                onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} 
+                                className="flex-1" 
+                              />
                             ) : (
                               <div className="flex-1 space-y-2">
-                                <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                                   <ImageIcon size={16} /> Картинка {optIndex + 1}
-                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) updateOptionImage(qIndex, optIndex, file);
-                                  }} />
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) updateOptionImage(qIndex, optIndex, file);
+                                    }} 
+                                  />
                                 </label>
-                                <Input placeholder="Подпись (необязательно)" value={option} onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} />
+                                <Input 
+                                  placeholder="Подпись (необязательно)" 
+                                  value={option} 
+                                  onChange={(e) => updateOption(qIndex, optIndex, e.target.value)} 
+                                />
                               </div>
                             )}
 
@@ -262,7 +297,7 @@ export default function NewQuizPage() {
                 ))}
               </div>
 
-              <Button type="submit" disabled={loading} className="w-full py-8 text-xl bg-gradient-to-r from-purple-500 to-pink-500">
+              <Button type="submit" disabled={loading} className="w-full py-8 text-xl">
                 {loading ? "Создаём квиз..." : "Создать квиз"}
               </Button>
             </form>
