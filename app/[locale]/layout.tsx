@@ -1,4 +1,3 @@
-import "./globals.css";
 import Navbar from "@/components/ui/Navbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Space_Grotesk } from "next/font/google";
