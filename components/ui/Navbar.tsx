@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { Menu, LogOut, Sun, Moon, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,7 +19,10 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("student");
   const pathname = usePathname();
+  const params = useParams();
   const { theme, setTheme } = useTheme();
+
+  const currentLocale = (params?.locale as string) || "ru";
 
   const languages: Language[] = [
     { code: "ru", label: "Рус" },
@@ -53,11 +56,14 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = `/${currentLocale}`;
   };
 
-  const changeLanguage = (locale: string) => {
-    alert(`Смена языка на: ${locale} (логика next-intl будет добавлена позже)`);
+  // Правильная смена языка
+  const changeLanguage = (newLocale: string) => {
+    // Заменяем текущий язык в пути на новый
+    const newPath = pathname.replace(`/${currentLocale}`, `/${newLocale}`);
+    window.location.href = newPath;
     setIsOpen(false);
   };
 
@@ -65,7 +71,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur-md border-border">
       <div className="max-w-screen-2xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Логотип */}
-        <Link href="/" className="flex items-center gap-3">
+        <Link href={`/${currentLocale}`} className="flex items-center gap-3">
           <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
             <span className="text-black font-bold text-2xl">K</span>
           </div>
@@ -74,23 +80,29 @@ export default function Navbar() {
 
         {/* Десктоп меню */}
         <div className="hidden md:flex items-center gap-2 text-sm">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-5 py-2.5 rounded-lg text-base transition-colors hover:bg-muted ${
-                pathname === link.href 
-                  ? "text-primary font-medium" 
-                  : "text-foreground/80"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const fullHref = link.href === "/" 
+              ? `/${currentLocale}` 
+              : `/${currentLocale}${link.href}`;
+
+            return (
+              <Link
+                key={link.href}
+                href={fullHref}
+                className={`px-5 py-2.5 rounded-lg text-base transition-colors hover:bg-muted ${
+                  pathname === fullHref 
+                    ? "text-primary font-medium" 
+                    : "text-foreground/80"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
 
           {isAdminOrTeacher && (
             <Link
-              href="/admin"
+              href={`/${currentLocale}/admin`}
               className="px-5 py-2.5 rounded-lg text-base hover:bg-muted text-purple-400"
             >
               ⚙️ Админ
@@ -102,11 +114,15 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {/* Язык */}
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
-            {languages.map((lang: Language) => (
+            {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => changeLanguage(lang.code)}
-                className="px-5 py-2 text-base rounded-lg hover:bg-background transition"
+                className={`px-4 py-2 text-sm rounded-lg transition ${
+                  currentLocale === lang.code 
+                    ? "bg-background text-foreground font-medium shadow-sm" 
+                    : "hover:bg-background text-muted-foreground"
+                }`}
               >
                 {lang.label}
               </button>
@@ -139,7 +155,7 @@ export default function Navbar() {
               </Button>
             </div>
           ) : (
-            <Link href="/login">
+            <Link href={`/${currentLocale}/login`}>
               <Button size="lg">Войти</Button>
             </Link>
           )}
@@ -173,20 +189,26 @@ export default function Navbar() {
 
                 {/* Навигация */}
                 <div className="px-2 py-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center px-5 py-5 text-xl rounded-2xl hover:bg-muted"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  {navLinks.map((link) => {
+                    const fullHref = link.href === "/" 
+                      ? `/${currentLocale}` 
+                      : `/${currentLocale}${link.href}`;
+
+                    return (
+                      <Link
+                        key={link.href}
+                        href={fullHref}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center px-5 py-5 text-xl rounded-2xl hover:bg-muted"
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
 
                   {isAdminOrTeacher && (
                     <Link
-                      href="/admin"
+                      href={`/${currentLocale}/admin`}
                       onClick={() => setIsOpen(false)}
                       className="flex items-center px-5 py-5 text-xl rounded-2xl text-purple-400 hover:bg-muted"
                     >
@@ -202,10 +224,10 @@ export default function Navbar() {
                       <Globe size={20} /> Язык
                     </div>
                     <div className="flex gap-3">
-                      {languages.map((lang: Language) => (
+                      {languages.map((lang) => (
                         <Button
                           key={lang.code}
-                          variant="outline"
+                          variant={currentLocale === lang.code ? "default" : "outline"}
                           size="lg"
                           onClick={() => changeLanguage(lang.code)}
                           className="flex-1 py-6 text-base"
