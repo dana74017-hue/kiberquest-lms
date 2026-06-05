@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut, Sun, Moon, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +19,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("student");
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   // Получаем текущий язык из URL
@@ -62,18 +63,24 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = `/${currentLocale}`;
+    router.push(`/${currentLocale}`);
   };
 
+  // Улучшенная смена языка
   const changeLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
-    if (segments.length > 1) {
+    
+    // Если путь слишком короткий, добавляем язык
+    if (segments.length < 2) {
+      router.push(`/${newLocale}`);
+    } else {
       segments[1] = newLocale;
+      const newPath = segments.join("/");
+      router.push(newPath);
     }
-    const newPath = segments.join("/");
-    window.location.href = newPath;
+    
     setIsOpen(false);
   };
 
@@ -130,7 +137,7 @@ export default function Navbar() {
                 onClick={() => changeLanguage(lang.code)}
                 className={`px-4 py-2 text-sm rounded-lg transition ${
                   currentLocale === lang.code 
-                    ? "bg-background text-foreground font-medium shadow-sm" 
+                    ? "bg-background text-foreground font-medium" 
                     : "hover:bg-background text-muted-foreground"
                 }`}
               >
@@ -185,11 +192,7 @@ export default function Navbar() {
                 {user && (
                   <div className="px-6 pb-6 border-b">
                     <p className="text-base text-muted-foreground">{user.email}</p>
-                    <Button 
-                      variant="ghost" 
-                      onClick={handleLogout} 
-                      className="mt-3 text-red-500 text-lg"
-                    >
+                    <Button variant="ghost" onClick={handleLogout} className="mt-3 text-red-500 text-lg">
                       Выйти
                     </Button>
                   </div>
