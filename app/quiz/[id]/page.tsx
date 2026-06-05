@@ -58,23 +58,40 @@ export default function TakeQuizPage() {
     setResult(score);
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Загрузка...</div>;
-  if (!quiz) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Квиз не найден</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-2xl text-muted-foreground">Загрузка...</div>
+      </div>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-2xl text-muted-foreground">Квиз не найден</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
+    <div className="min-h-screen bg-background pt-20 px-6">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">{quiz.title}</h1>
 
-        <Card className="bg-slate-900 border-slate-700">
+        <Card>
           <CardContent className="p-8">
             {questions.length === 0 && (
-              <p className="text-center text-slate-400 py-8">Вопросы пока не загружены</p>
+              <p className="text-center text-muted-foreground py-8">
+                Вопросы пока не загружены
+              </p>
             )}
 
             {questions.map((q, qIndex) => (
               <div key={qIndex} className="mb-10 last:mb-0">
-                <p className="text-xl font-medium mb-6">{qIndex + 1}. {q.question}</p>
+                <p className="text-xl font-medium mb-6">
+                  {qIndex + 1}. {q.question}
+                </p>
 
                 <div className="space-y-3">
                   {q.options.map((option, optIndex) => {
@@ -87,18 +104,20 @@ export default function TakeQuizPage() {
                         onClick={() => selectAnswer(qIndex, optIndex)}
                         className={`w-full flex items-center gap-4 text-left p-4 rounded-2xl border transition-all ${
                           isSelected 
-                            ? "border-purple-500 bg-purple-500/20" 
-                            : "border-slate-700 hover:border-slate-500"
+                            ? "border-primary bg-primary/10" 
+                            : "border-border hover:border-primary/50"
                         }`}
                       >
                         {img && (
                           <img 
                             src={img} 
                             alt="" 
-                            className="w-28 h-28 object-cover rounded-xl flex-shrink-0 border border-slate-600" 
+                            className="w-28 h-28 object-cover rounded-xl flex-shrink-0 border border-border" 
                           />
                         )}
-                        <span className="flex-1">{option || (img ? "Вариант " + (optIndex + 1) : "")}</span>
+                        <span className="flex-1 text-lg">
+                          {option || (img ? "Вариант " + (optIndex + 1) : "")}
+                        </span>
                       </button>
                     );
                   })}
@@ -109,7 +128,7 @@ export default function TakeQuizPage() {
             {questions.length > 0 && result === null && (
               <Button 
                 onClick={finishQuiz} 
-                className="w-full py-8 text-xl mt-6 bg-gradient-to-r from-purple-500 to-pink-500"
+                className="w-full py-8 text-xl mt-6"
               >
                 Завершить квиз и посмотреть результат
               </Button>
@@ -117,11 +136,13 @@ export default function TakeQuizPage() {
 
             {result !== null && (
               <div className="text-center py-12">
-                <div className="text-7xl font-bold text-purple-400 mb-4">
+                <div className="text-7xl font-bold text-primary mb-4">
                   {result} / {questions.length}
                 </div>
                 <p className="text-2xl mb-8">Твой результат</p>
-                <Button onClick={() => window.location.reload()}>Пройти заново</Button>
+                <Button onClick={() => window.location.reload()} size="lg">
+                  Пройти заново
+                </Button>
               </div>
             )}
           </CardContent>

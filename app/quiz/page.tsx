@@ -52,21 +52,27 @@ export default function QuizPage() {
       .eq("id", quizId);
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Загрузка квизов...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-2xl text-muted-foreground">Загрузка квизов...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-20 px-6">
+    <div className="min-h-screen bg-background pt-20 px-6">
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h1 className="text-6xl font-bold">Квизы</h1>
-            <p className="text-slate-400 text-xl mt-2">Проверь свои знания</p>
+            <p className="text-muted-foreground text-xl mt-2">Проверь свои знания</p>
           </div>
 
           {(userRole === "teacher" || userRole === "admin") && (
             <Link href="/admin/quizzes/new">
-              <Button className="bg-gradient-to-r from-purple-400 to-pink-500 text-black px-8 py-6 text-lg">
-                <Upload size={22} className="mr-3" />
+              <Button className="bg-gradient-to-r from-purple-400 to-pink-500 text-black px-8 py-6 text-lg flex items-center gap-3">
+                <Upload size={22} />
                 Добавить новый квиз
               </Button>
             </Link>
@@ -75,31 +81,38 @@ export default function QuizPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {quizzes.map((quiz) => (
-            <Card key={quiz.id} className="bg-slate-900 border-slate-700 hover:border-purple-400 transition-all group">
+            <Card 
+              key={quiz.id} 
+              className="bg-card border border-border hover:border-primary/50 transition-all group overflow-hidden"
+            >
               <CardContent className="p-0">
                 {/* Обложка квиза */}
-                <div className="h-52 bg-slate-800 relative overflow-hidden">
+                <div className="h-52 bg-muted relative overflow-hidden">
                   {quiz.image_url ? (
                     <img 
                       src={quiz.image_url} 
                       alt={quiz.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-7xl">❓</div>
+                    <div className="w-full h-full flex items-center justify-center text-7xl bg-gradient-to-br from-muted to-card">
+                      ❓
+                    </div>
                   )}
                 </div>
 
                 <div className="p-8">
-                  <h3 className="text-2xl font-semibold mb-3 group-hover:text-purple-400">{quiz.title}</h3>
+                  <h3 className="text-2xl font-semibold mb-3 group-hover:text-primary transition-colors">
+                    {quiz.title}
+                  </h3>
                   
-                  <div className="flex items-center gap-2 text-slate-400 text-sm mb-8">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-8">
                     <Eye size={18} />
                     <span>{quiz.views || 0} просмотров</span>
                   </div>
 
                   <Link href={`/quiz/${quiz.id}`} onClick={() => incrementViews(quiz.id)}>
-                    <Button className="w-full py-6 text-lg bg-white text-black hover:bg-purple-400">
+                    <Button className="w-full py-6 text-lg">
                       Пройти квиз →
                     </Button>
                   </Link>
@@ -108,6 +121,17 @@ export default function QuizPage() {
             </Card>
           ))}
         </div>
+
+        {quizzes.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-2xl text-muted-foreground mb-4">Пока нет квизов</p>
+            {(userRole === "teacher" || userRole === "admin") && (
+              <Link href="/admin/quizzes/new">
+                <Button>Создать первый квиз</Button>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
