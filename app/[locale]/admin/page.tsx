@@ -29,23 +29,16 @@ export default function AdminPanel() {
   const loadData = async () => {
     setLoading(true);
 
-    // Простой и надёжный способ
-    const { data: profilesData } = await supabase
+    // Самый простой и надёжный запрос
+    const { data: profilesData, error } = await supabase
       .from("profiles")
-      .select("id, full_name, role, created_at")
+      .select("id, email, full_name, role, created_at")
       .order("created_at", { ascending: false });
 
-    // Получаем email отдельно из auth.users
-    const userIds = profilesData?.map(p => p.id) || [];
-    const { data: authUsers } = await supabase.auth.admin.listUsers();
-
-    const profilesWithEmail = (profilesData || []).map(profile => {
-      const authUser = authUsers?.users.find(u => u.id === profile.id);
-      return {
-        ...profile,
-        email: authUser?.email || "Нет email",
-      };
-    });
+    if (error) {
+      console.error("Ошибка загрузки:", error);
+      alert("Ошибка загрузки пользователей: " + error.message);
+    }
 
     // Статистика
     const [{ count: usersCount }, { count: coursesCount }, { count: quizzesCount }] = await Promise.all([
@@ -54,7 +47,7 @@ export default function AdminPanel() {
       supabase.from("quizzes").select("*", { count: "exact", head: true }),
     ]);
 
-    setProfiles(profilesWithEmail);
+    setProfiles(profilesData || []);
     setStats({
       users: usersCount || 0,
       courses: coursesCount || 0,
@@ -155,7 +148,7 @@ export default function AdminPanel() {
                       <td className="py-4 px-4 font-medium">
                         {profile.full_name || "Без имени"}
                       </td>
-                      <td className="py-4 px-4 text-muted-foreground">
+                      <td className="py-4 px-4 text-muted-foreground font-mono">
                         {profile.email}
                       </td>
                       <td className="py-4 px-4">
