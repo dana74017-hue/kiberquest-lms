@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, RefreshCw, LogOut } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -20,6 +20,7 @@ export default function AdminPanel() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [stats, setStats] = useState({ users: 0, courses: 0, quizzes: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -28,32 +29,35 @@ export default function AdminPanel() {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
 
-    // Самый простой и надёжный запрос
-    const { data: profilesData, error } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, role, created_at")
-      .order("created_at", { ascending: false });
+    try {
+      const { data: profilesData, error: fetchError } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, role, created_at")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Ошибка загрузки:", error);
-      alert("Ошибка загрузки пользователей: " + error.message);
+      if (fetchError) throw fetchError;
+
+      // Статистика
+      const [{ count: usersCount }, { count: coursesCount }, { count: quizzesCount }] = await Promise.all([
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("courses").select("*", { count: "exact", head: true }),
+        supabase.from("quizzes").select("*", { count: "exact", head: true }),
+      ]);
+
+      setProfiles(profilesData || []);
+      setStats({
+        users: usersCount || 0,
+        courses: coursesCount || 0,
+        quizzes: quizzesCount || 0,
+      });
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Не удалось загрузить данные");
+    } finally {
+      setLoading(false);
     }
-
-    // Статистика
-    const [{ count: usersCount }, { count: coursesCount }, { count: quizzesCount }] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("courses").select("*", { count: "exact", head: true }),
-      supabase.from("quizzes").select("*", { count: "exact", head: true }),
-    ]);
-
-    setProfiles(profilesData || []);
-    setStats({
-      users: usersCount || 0,
-      courses: coursesCount || 0,
-      quizzes: quizzesCount || 0,
-    });
-    setLoading(false);
   };
 
   const changeRole = async (userId: string, newRole: "student" | "teacher" | "admin") => {
@@ -63,17 +67,20 @@ export default function AdminPanel() {
       .eq("id", userId);
 
     if (!error) {
-      setProfiles(prev =>
-        prev.map(p => (p.id === userId ? { ...p, role: newRole } : p))
-      );
       alert("Роль успешно изменена!");
+      loadData(); // обновляем список
     } else {
-      alert("Ошибка: " + error.message);
+      alert("Ошибка изменения роли: " + error.message);
     }
   };
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
   };
 
   if (loading) {
@@ -90,7 +97,7 @@ export default function AdminPanel() {
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-5xl font-bold">Админ-панель</h1>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="icon"
@@ -99,9 +106,20 @@ export default function AdminPanel() {
             >
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </Button>
-            <Button onClick={loadData} variant="outline">Обновить данные</Button>
+            <Button onClick={loadData} variant="outline" size="icon">
+              <RefreshCw size={20} />
+            </Button>
+            <Button onClick={handleLogout} variant="ghost" size="icon" className="text-red-500">
+              <LogOut size={20} />
+            </Button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded-xl">
+            Ошибка: {error}
+          </div>
+        )}
 
         {/* Статистика */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -143,55 +161,63 @@ export default function AdminPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {profiles.map((profile) => (
-                    <tr key={profile.id} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-4 px-4 font-medium">
-                        {profile.full_name || "Без имени"}
-                      </td>
-                      <td className="py-4 px-4 text-muted-foreground font-mono">
-                        {profile.email}
-                      </td>
-                      <td className="py-4 px-4">
-                        <Badge className={
-                          profile.role === "admin" ? "bg-red-500" :
-                          profile.role === "teacher" ? "bg-purple-500" : "bg-cyan-500"
-                        }>
-                          {profile.role}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-4 text-muted-foreground">
-                        {new Date(profile.created_at).toLocaleDateString("ru-RU")}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => changeRole(profile.id, "student")} 
-                            disabled={profile.role === "student"}
-                          >
-                            Студент
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => changeRole(profile.id, "teacher")} 
-                            disabled={profile.role === "teacher"}
-                          >
-                            Преподаватель
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => changeRole(profile.id, "admin")} 
-                            disabled={profile.role === "admin"}
-                          >
-                            Админ
-                          </Button>
-                        </div>
+                  {profiles.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-10 text-muted-foreground">
+                        Пользователи не найдены
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    profiles.map((profile) => (
+                      <tr key={profile.id} className="border-b border-border hover:bg-muted/50">
+                        <td className="py-4 px-4 font-medium">
+                          {profile.full_name || "Без имени"}
+                        </td>
+                        <td className="py-4 px-4 text-muted-foreground font-mono">
+                          {profile.email}
+                        </td>
+                        <td className="py-4 px-4">
+                          <Badge className={
+                            profile.role === "admin" ? "bg-red-500" :
+                            profile.role === "teacher" ? "bg-purple-500" : "bg-cyan-500"
+                          }>
+                            {profile.role}
+                          </Badge>
+                        </td>
+                        <td className="py-4 px-4 text-muted-foreground">
+                          {new Date(profile.created_at).toLocaleDateString("ru-RU")}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => changeRole(profile.id, "student")} 
+                              disabled={profile.role === "student"}
+                            >
+                              Студент
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => changeRole(profile.id, "teacher")} 
+                              disabled={profile.role === "teacher"}
+                            >
+                              Преподаватель
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => changeRole(profile.id, "admin")} 
+                              disabled={profile.role === "admin"}
+                            >
+                              Админ
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
