@@ -29,18 +29,32 @@ export default function AdminPanel() {
   const loadData = async () => {
     setLoading(true);
 
+    // Простой и надёжный способ
     const { data: profilesData } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, role, created_at")
       .order("created_at", { ascending: false });
 
+    // Получаем email отдельно из auth.users
+    const userIds = profilesData?.map(p => p.id) || [];
+    const { data: authUsers } = await supabase.auth.admin.listUsers();
+
+    const profilesWithEmail = (profilesData || []).map(profile => {
+      const authUser = authUsers?.users.find(u => u.id === profile.id);
+      return {
+        ...profile,
+        email: authUser?.email || "Нет email",
+      };
+    });
+
+    // Статистика
     const [{ count: usersCount }, { count: coursesCount }, { count: quizzesCount }] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("courses").select("*", { count: "exact", head: true }),
       supabase.from("quizzes").select("*", { count: "exact", head: true }),
     ]);
 
-    setProfiles(profilesData || []);
+    setProfiles(profilesWithEmail);
     setStats({
       users: usersCount || 0,
       courses: coursesCount || 0,
@@ -72,7 +86,7 @@ export default function AdminPanel() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        Загрузка...
+        Загрузка пользователей...
       </div>
     );
   }
@@ -128,23 +142,26 @@ export default function AdminPanel() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4">Пользователь</th>
+                    <th className="text-left py-3 px-4">Имя</th>
+                    <th className="text-left py-3 px-4">Email</th>
                     <th className="text-left py-3 px-4">Роль</th>
                     <th className="text-left py-3 px-4">Дата регистрации</th>
-                    <th className="text-left py-3 px-4">Изменить роль</th>
+                    <th className="text-left py-3 px-4">Действия</th>
                   </tr>
                 </thead>
                 <tbody>
                   {profiles.map((profile) => (
                     <tr key={profile.id} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-4 px-4">
-                        <div className="font-medium">{profile.full_name || "Без имени"}</div>
-                        <div className="text-xs text-muted-foreground">{profile.email}</div>
+                      <td className="py-4 px-4 font-medium">
+                        {profile.full_name || "Без имени"}
+                      </td>
+                      <td className="py-4 px-4 text-muted-foreground">
+                        {profile.email}
                       </td>
                       <td className="py-4 px-4">
                         <Badge className={
-                          profile.role === "admin" ? "bg-red-500 hover:bg-red-600" :
-                          profile.role === "teacher" ? "bg-purple-500 hover:bg-purple-600" : "bg-cyan-500 hover:bg-cyan-600"
+                          profile.role === "admin" ? "bg-red-500" :
+                          profile.role === "teacher" ? "bg-purple-500" : "bg-cyan-500"
                         }>
                           {profile.role}
                         </Badge>
