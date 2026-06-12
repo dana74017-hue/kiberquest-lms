@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { translations, type Locale } from "./translations";
 
 interface LanguageContextType {
@@ -14,19 +14,24 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
-  // Получаем язык из URL
+  const router = useRouter();
+
+  // Получаем текущий язык из URL
   const getLocaleFromPath = (): Locale => {
+    if (!pathname) return "ru";
     const segments = pathname.split("/");
     const lang = segments[1] as Locale;
     return ["ru", "en", "kz"].includes(lang) ? lang : "ru";
   };
 
-  const [locale, setLocale] = useState<Locale>(getLocaleFromPath());
+  const [locale, setLocale] = useState<Locale>(getLocaleFromPath);
 
-  // Обновляем язык при смене URL
+  // Обновляем язык при смене маршрута
   useEffect(() => {
-    setLocale(getLocaleFromPath());
+    const newLocale = getLocaleFromPath();
+    if (newLocale !== locale) {
+      setLocale(newLocale);
+    }
   }, [pathname]);
 
   // Функция получения перевода
@@ -38,19 +43,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (value && typeof value === "object" && k in value) {
         value = value[k];
       } else {
-        return key; // если перевода нет — возвращаем ключ
+        return key; // если перевода нет — возвращаем ключ (для отладки)
       }
     }
 
     return typeof value === "string" ? value : key;
   };
 
-  // Смена языка
+  // Смена языка (без полной перезагрузки страницы)
   const changeLanguage = (newLocale: Locale) => {
+    if (newLocale === locale) return;
+
     const segments = pathname.split("/");
     segments[1] = newLocale;
     const newPath = segments.join("/");
-    window.location.href = newPath;
+
+    router.push(newPath);
   };
 
   return (
