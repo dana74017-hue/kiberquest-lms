@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,23 +11,76 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // Универсальная функция отправки письма
+  const sendEmail = async (to: string, subject: string, html: string) => {
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, subject, html }),
+      });
+
+      if (!response.ok) {
+        console.error("Не удалось отправить письмо");
+      }
+    } catch (error) {
+      console.error("Ошибка при отправке письма:", error);
+    }
+  };
 
   const handleAuth = async () => {
+    if (!email || !password) {
+      alert("Введите email и пароль");
+      return;
+    }
+
     setLoading(true);
 
     if (isLogin) {
+      // ==================== ВХОД ====================
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+
       if (error) {
         alert("Ошибка входа: " + error.message);
       } else {
-        window.location.href = "/dashboard";
+        // Отправляем уведомление о входе (не мешаем входу, если письмо не отправилось)
+        await sendEmail(
+          email,
+          "Вход в KiberQuest",
+          `
+            <h2>Уведомление о входе</h2>
+            <p>В ваш аккаунт <strong>KiberQuest LMS</strong> был выполнен вход.</p>
+            <p><strong>Время:</strong> ${new Date().toLocaleString("ru-RU")}</p>
+            <p>Если это были не вы — немедленно смените пароль.</p>
+          `
+        );
+
+        router.push("/dashboard");
       }
     } else {
+      // ==================== РЕГИСТРАЦИЯ ====================
       const { error } = await supabase.auth.signUp({ email, password });
+
       if (error) {
         alert("Ошибка регистрации: " + error.message);
       } else {
-        alert("Проверь почту для подтверждения аккаунта!");
+        // Отправляем приветственное письмо
+        await sendEmail(
+          email,
+          "Добро пожаловать в KiberQuest!",
+          `
+            <h2>Здравствуйте!</h2>
+            <p>Ваш аккаунт в <strong>KiberQuest LMS</strong> успешно зарегистрирован.</p>
+            <p>Теперь вы можете войти и начать обучение веб-разработке.</p>
+            <br />
+            <p>С уважением,<br>Команда KiberQuest</p>
+          `
+        );
+
+        alert("Регистрация прошла успешно! Проверьте почту для подтверждения аккаунта.");
+        setIsLogin(true); // Переключаем на форму входа
       }
     }
 
