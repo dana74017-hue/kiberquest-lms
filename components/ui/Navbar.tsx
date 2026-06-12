@@ -8,29 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "next-themes";
-
-interface Language {
-  code: string;
-  label: string;
-}
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("student");
+
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { locale, t } = useLanguage();
 
-  const getCurrentLocale = () => {
-    const segments = pathname.split("/");
-    const lang = segments[1];
-    return ["ru", "en", "kz"].includes(lang) ? lang : "ru";
-  };
+  const currentLocale = locale;
 
-  const currentLocale = getCurrentLocale();
-
-  const languages: Language[] = [
+  const languages = [
     { code: "ru", label: "Рус" },
     { code: "en", label: "Eng" },
     { code: "kz", label: "Қаз" },
@@ -52,12 +44,13 @@ export default function Navbar() {
 
   const isAdminOrTeacher = userRole === "admin" || userRole === "teacher";
 
+  // Навигация с переводами
   const navLinks = [
-    { href: "/", label: "Главная" },
-    { href: "/courses", label: "Курсы" },
-    { href: "/editor", label: "Редактор" },
-    { href: "/quiz", label: "Квизы" },
-    { href: "/dashboard", label: "Кабинет" },
+    { href: "/", label: t("nav.home") },
+    { href: "/courses", label: t("nav.courses") },
+    { href: "/editor", label: t("nav.editor") },
+    { href: "/quiz", label: t("nav.quiz") },
+    { href: "/dashboard", label: t("nav.dashboard") },
   ];
 
   const handleLogout = async () => {
@@ -70,13 +63,9 @@ export default function Navbar() {
     if (newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
-    if (segments.length < 2) {
-      router.push(`/${newLocale}`);
-    } else {
-      segments[1] = newLocale;
-      const newPath = segments.join("/");
-      router.push(newPath);
-    }
+    segments[1] = newLocale;
+    const newPath = segments.join("/");
+    router.push(newPath);
     setIsOpen(false);
   };
 
@@ -118,14 +107,14 @@ export default function Navbar() {
               href={`/${currentLocale}/admin`}
               className="px-5 py-2.5 rounded-lg text-base hover:bg-muted text-purple-400"
             >
-              ⚙️ Админ
+              {t("nav.admin")}
             </Link>
           )}
         </div>
 
         {/* Правая часть десктопа */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Язык */}
+          {/* Переключатель языка */}
           <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
             {languages.map((lang) => (
               <button
@@ -169,7 +158,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link href={`/${currentLocale}/login`}>
-              <Button size="lg">Войти</Button>
+              <Button size="lg">{t("nav.login")}</Button>
             </Link>
           )}
         </div>
@@ -185,7 +174,7 @@ export default function Navbar() {
 
             <SheetContent side="right" className="bg-background w-80 p-0">
               <div className="flex flex-col h-full pt-8">
-                {/* Информация о пользователе */}
+                {/* Пользователь */}
                 {user && (
                   <div className="px-6 pb-6 border-b">
                     <p className="text-base text-muted-foreground">{user.email}</p>
@@ -224,21 +213,21 @@ export default function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="flex items-center px-5 py-5 text-xl rounded-2xl hover:bg-muted text-purple-400"
                     >
-                      ⚙️ Админ-панель
+                      {t("nav.admin")}
                     </Link>
                   )}
                 </div>
 
-                {/* Кнопка "Войти" для неавторизованных пользователей */}
+                {/* Кнопка Войти */}
                 {!user && (
                   <div className="px-6 py-4">
                     <Link href={`/${currentLocale}/login`} onClick={() => setIsOpen(false)}>
-                      <Button className="w-full py-6 text-lg">Войти</Button>
+                      <Button className="w-full py-6 text-lg">{t("nav.login")}</Button>
                     </Link>
                   </div>
                 )}
 
-                {/* Нижняя часть — Язык и Тема */}
+                {/* Язык и Тема */}
                 <div className="mt-auto p-6 border-t space-y-6">
                   <div>
                     <div className="flex items-center gap-2 text-base text-muted-foreground mb-4">
