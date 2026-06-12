@@ -13,18 +13,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Универсальная функция отправки письма
-  const sendEmail = async (to: string, subject: string, html: string) => {
+  // Универсальная функция отправки письма (с возможностью копии админу)
+  const sendEmail = async (
+    to: string, 
+    subject: string, 
+    html: string, 
+    sendCopyToAdmin: boolean = false
+  ) => {
     try {
-      const response = await fetch("/api/send-email", {
+      await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, html }),
+        body: JSON.stringify({ 
+          to, 
+          subject, 
+          html, 
+          sendCopyToAdmin 
+        }),
       });
-
-      if (!response.ok) {
-        console.error("Не удалось отправить письмо");
-      }
     } catch (error) {
       console.error("Ошибка при отправке письма:", error);
     }
@@ -45,7 +51,7 @@ export default function LoginPage() {
       if (error) {
         alert("Ошибка входа: " + error.message);
       } else {
-        // Отправляем уведомление о входе (не мешаем входу, если письмо не отправилось)
+        // Отправляем уведомление о входе + копию админу
         await sendEmail(
           email,
           "Вход в KiberQuest",
@@ -54,7 +60,8 @@ export default function LoginPage() {
             <p>В ваш аккаунт <strong>KiberQuest LMS</strong> был выполнен вход.</p>
             <p><strong>Время:</strong> ${new Date().toLocaleString("ru-RU")}</p>
             <p>Если это были не вы — немедленно смените пароль.</p>
-          `
+          `,
+          true // ← true = отправить копию тебе (админу)
         );
 
         router.push("/dashboard");
@@ -66,7 +73,7 @@ export default function LoginPage() {
       if (error) {
         alert("Ошибка регистрации: " + error.message);
       } else {
-        // Отправляем приветственное письмо
+        // Отправляем приветственное письмо (без копии админу)
         await sendEmail(
           email,
           "Добро пожаловать в KiberQuest!",
@@ -80,7 +87,7 @@ export default function LoginPage() {
         );
 
         alert("Регистрация прошла успешно! Проверьте почту для подтверждения аккаунта.");
-        setIsLogin(true); // Переключаем на форму входа
+        setIsLogin(true);
       }
     }
 
