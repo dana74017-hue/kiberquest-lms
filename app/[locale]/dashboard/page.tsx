@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   // Profile
-  const [fullName, setFullName] = useState("dana74017");
+  const [fullName, setFullName] = useState("Пользователь KiberQuest");
   const [status, setStatus] = useState("Начинающий Full-Stack Разработчик");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
