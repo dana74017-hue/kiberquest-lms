@@ -22,7 +22,6 @@ export default function Navbar() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
-  // Получаем текущий язык из URL
   const getCurrentLocale = () => {
     const segments = pathname.split("/");
     const lang = segments[1];
@@ -64,13 +63,13 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push(`/${currentLocale}`);
+    setIsOpen(false);
   };
 
   const changeLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
-    
     if (segments.length < 2) {
       router.push(`/${newLocale}`);
     } else {
@@ -78,7 +77,6 @@ export default function Navbar() {
       const newPath = segments.join("/");
       router.push(newPath);
     }
-    
     setIsOpen(false);
   };
 
@@ -187,15 +185,21 @@ export default function Navbar() {
 
             <SheetContent side="right" className="bg-background w-80 p-0">
               <div className="flex flex-col h-full pt-8">
+                {/* Информация о пользователе */}
                 {user && (
                   <div className="px-6 pb-6 border-b">
                     <p className="text-base text-muted-foreground">{user.email}</p>
-                    <Button variant="ghost" onClick={handleLogout} className="mt-3 text-red-500 text-lg">
+                    <Button 
+                      variant="ghost" 
+                      onClick={handleLogout} 
+                      className="mt-3 text-red-500 text-lg w-full justify-start"
+                    >
                       Выйти
                     </Button>
                   </div>
                 )}
 
+                {/* Навигация */}
                 <div className="px-2 py-4">
                   {navLinks.map((link) => {
                     const fullHref = link.href === "/" 
@@ -213,8 +217,28 @@ export default function Navbar() {
                       </Link>
                     );
                   })}
+
+                  {isAdminOrTeacher && (
+                    <Link
+                      href={`/${currentLocale}/admin`}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center px-5 py-5 text-xl rounded-2xl hover:bg-muted text-purple-400"
+                    >
+                      ⚙️ Админ-панель
+                    </Link>
+                  )}
                 </div>
 
+                {/* Кнопка "Войти" для неавторизованных пользователей */}
+                {!user && (
+                  <div className="px-6 py-4">
+                    <Link href={`/${currentLocale}/login`} onClick={() => setIsOpen(false)}>
+                      <Button className="w-full py-6 text-lg">Войти</Button>
+                    </Link>
+                  </div>
+                )}
+
+                {/* Нижняя часть — Язык и Тема */}
                 <div className="mt-auto p-6 border-t space-y-6">
                   <div>
                     <div className="flex items-center gap-2 text-base text-muted-foreground mb-4">
